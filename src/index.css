@@ -1,0 +1,217 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@font-face {
+  font-family: "Alfabet";
+  src: url("https://cdn.shopify.com/s/files/1/0724/4831/1464/files/Alfabet_Light_13507c97-d1f7-4154-9c69-8dee559e1ea3.woff")
+    format("woff");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Alfabet";
+  src: url("https://cdn.shopify.com/s/files/1/0724/4831/1464/files/Alfabet_Regular.woff")
+    format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Alfabet";
+  src: url("https://cdn.shopify.com/s/files/1/0724/4831/1464/files/Alfabet_Medium.woff")
+    format("woff");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Alfabet";
+  src: url("https://cdn.shopify.com/s/files/1/0724/4831/1464/files/Alfabet_Bold.woff")
+    format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Alfabet";
+  src: url("https://cdn.shopify.com/s/files/1/0724/4831/1464/files/Alfabet_ExtraBold.woff")
+    format("woff");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Alfabet";
+  src: url("https://cdn.shopify.com/s/files/1/0724/4831/1464/files/Alfabet_Black.woff")
+    format("woff");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --bg: #eaf6f4;
+  --surface: #f6fbfa;
+  --green: #11b5b2;
+  --green-dim: #d5efed;
+  --green-glow: rgba(17, 181, 178, 0.16);
+  --white: #122320;
+  --muted: #607771;
+  --border: rgba(17, 181, 178, 0.18);
+}
+
+html,
+body {
+  font-family: "Alfabet", sans-serif;
+  background: var(--bg);
+  color: var(--white);
+  scroll-behavior: smooth;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes loaderIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes loaderProgress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes scanLine {
+  from {
+    top: 8px;
+  }
+  to {
+    top: calc(100% - 8px);
+  }
+}
+
+@keyframes subtleShift {
+  0%,
+  100% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+}
+
+@keyframes checkDraw {
+  from {
+    stroke-dashoffset: 120;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes spinSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fade-up {
+  opacity: 0;
+  animation: fadeUp 0.7s ease forwards;
+}
+
+.shimmer-pill {
+  background: linear-gradient(120deg, transparent 15%, rgba(255, 255, 255, 0.72), transparent 85%);
+  background-size: 220% 100%;
+  animation: shimmer 3.4s linear infinite;
+}
+
+.loader-enter {
+  animation: loaderIn 0.6s ease forwards;
+}
+
+.scan-line {
+  animation: scanLine 2s ease-in-out infinite alternate;
+}
+
+.bg-shift {
+  background-size: 200% 200%;
+  animation: subtleShift 14s ease-in-out infinite;
+}
+
+.check-draw {
+  stroke-dasharray: 120;
+  stroke-dashoffset: 120;
+  animation: checkDraw 1s ease forwards;
+}
+
+.spin-slow {
+  animation: spinSlow 15s linear infinite;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    line-height: 1.5;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
