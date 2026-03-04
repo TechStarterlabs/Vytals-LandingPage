@@ -101,7 +101,11 @@ export default function HeroSection() {
             Enter your product&apos;s serial number to continue verification.
           </p>
 
-          <div ref={formCardRef} className="rounded-2xl border border-[#E8ECE8] bg-white p-4 sm:p-5">
+        </div>
+
+        {/* SERIAL INPUT SECTION */}
+        <div className="relative overflow-hidden rounded-3xl border border-[#E8ECE8] bg-[#F7F8F5] p-4 sm:p-6">
+          <div ref={formCardRef} className="relative z-10 rounded-2xl border border-[#E8ECE8] bg-white p-4 sm:p-5">
             <label className="block text-sm font-medium text-[#111111]">
               Serial Number
               <input
@@ -126,16 +130,6 @@ export default function HeroSection() {
             >
               {isLoading ? "Continuing..." : "Continue to Verification →"}
             </button>
-          </div>
-        </div>
-
-        {/* HERO IMAGE PLACEHOLDER SECTION */}
-        <div className="relative overflow-hidden rounded-3xl border border-[#E8ECE8] bg-[#F7F8F5] p-4 sm:p-6">
-          <div className="relative z-10 flex h-[260px] items-center justify-center rounded-2xl border border-dashed border-[#D9E2DE] bg-white/70 text-center">
-            <div>
-              <p className="text-base font-semibold text-[#111111]">Product Banner Placeholder</p>
-              <p className="mt-1 text-sm text-[#666666]">Replace with your final branded visual.</p>
-            </div>
           </div>
         </div>
       </div>

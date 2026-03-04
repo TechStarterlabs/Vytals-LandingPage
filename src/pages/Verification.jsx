@@ -70,7 +70,6 @@ export default function Verification() {
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [email, setEmail] = useState("")
   const [emailSent, setEmailSent] = useState(emailVerified)
-  const [offerUnlocked, setOfferUnlocked] = useState(false)
   const [emailError, setEmailError] = useState("")
   const [isSendingEmail, setIsSendingEmail] = useState(false)
   const [metricValues, setMetricValues] = useState({
@@ -247,12 +246,12 @@ export default function Verification() {
   }
 
   return (
-    <section className="relative overflow-hidden bg-[linear-gradient(180deg,rgba(234,246,244,0.94),rgba(246,251,250,0.96))] px-4 pb-14 pt-28 sm:px-6 lg:px-8">
+    <section className="relative overflow-hidden bg-[linear-gradient(180deg,rgba(234,246,244,0.94),rgba(246,251,250,0.96))] px-4 pb-12 pt-24 sm:px-6 sm:pb-14 sm:pt-28 lg:px-8">
       <HeroBackground count={130} opacity={0.75} size={0.05} className="pointer-events-none absolute inset-0 z-0" />
       <div className="relative z-10 mx-auto max-w-6xl space-y-6">
         {/* SECTION: PAGE HEADER */}
         <header className="verify-heading text-center">
-          <h1 className="text-4xl font-black text-[#111111] sm:text-5xl">Verify Your Product</h1>
+          <h1 className="text-3xl font-black text-[#111111] sm:text-4xl lg:text-5xl">Verify Your Product</h1>
           <p className="mt-2 text-sm text-[var(--muted)]">Authenticity • Transparency • Trust</p>
           <p className="mt-2 text-sm text-[var(--green)]">Your authenticity is now verified ✅</p>
         </header>
@@ -264,17 +263,17 @@ export default function Verification() {
             <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#eaf8ef] text-xs text-[var(--green)]">✓</span>
           </div>
           <div className="space-y-3 border-t border-[#E8ECE8] pt-4 text-sm">
-            <div className="flex items-center justify-between gap-4 border-b border-[#E8ECE8] pb-2">
+            <div className="flex flex-col gap-1 border-b border-[#E8ECE8] pb-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <span className="text-[var(--muted)]">Product Name</span>
-              <span className="font-medium text-[#111111]">{DUMMY_COA.productName}</span>
+              <span className="break-all font-medium text-[#111111] sm:text-right">{DUMMY_COA.productName}</span>
             </div>
-            <div className="flex items-center justify-between gap-4 border-b border-[#E8ECE8] pb-2">
+            <div className="flex flex-col gap-1 border-b border-[#E8ECE8] pb-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <span className="text-[var(--muted)]">Batch Code</span>
-              <span className="font-medium text-[#111111]">{batchId}</span>
+              <span className="break-all font-medium text-[#111111] sm:text-right">{batchId}</span>
             </div>
-            <div className="flex items-center justify-between gap-4 pb-1">
+            <div className="flex flex-col gap-1 pb-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <span className="text-[var(--muted)]">Pack ID / Serial</span>
-              <span className="font-medium text-[#111111]">{serialNumber}</span>
+              <span className="break-all font-medium text-[#111111] sm:text-right">{serialNumber}</span>
             </div>
             <div className="rounded-xl border border-[#CFECD8] bg-[#ECFAF1] px-4 py-2 text-[var(--green)]">
               ✅ Authentic product - verified
@@ -283,56 +282,53 @@ export default function Verification() {
           </div>
         </article>
 
-        {/* SECTION: OTP GATE (ABOVE BLURRED COA) */}
-        <article className="verify-card rounded-2xl border border-[#D9E2DE] bg-white/88 p-5 backdrop-blur-[1px] sm:p-6">
-          <h3 className="text-xl font-bold text-[#111111]">Identity Check</h3>
-          <p className="mt-1 text-sm text-[var(--muted)]">Enter mobile number and OTP to unlock full CoA metrics.</p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-            <label className="text-sm font-medium text-[#111111]">
-              Mobile Number
-              <Input value={mobile} onChange={(event) => setMobile(event.target.value)} type="tel" placeholder="+91 XXXXX XXXXX" className="mt-2 border-[#E8ECE8] bg-white text-[#111111]" />
-            </label>
-            <Button type="button" onClick={sendOtp} className="bg-[var(--green)] text-white hover:bg-[var(--green)]/90">
-              {isSendingOtp ? "Sending..." : "Send OTP"}
-            </Button>
-          </div>
-
-          {isOtpSent && (
-            <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-              <label className="text-sm font-medium text-[#111111]">
-                Enter OTP
-                <Input value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))} type="text" placeholder="123456" className="mt-2 border-[#E8ECE8] bg-white text-[#111111] tracking-[0.25em]" />
-              </label>
-              <Button type="button" onClick={verifyOtp} className="bg-[var(--green)] text-white hover:bg-[var(--green)]/90">
-                Verify OTP
-              </Button>
-            </div>
-          )}
-          {otpError && <p className="mt-3 text-xs text-red-500">{otpError}</p>}
-        </article>
-
         {/* SECTION: COA METRICS (LOCKED UNTIL OTP) */}
         <article ref={coaSectionRef} className="verify-card relative overflow-hidden rounded-2xl border border-[#D9E2DE] bg-white/90 p-5 backdrop-blur-[1px] sm:p-6">
           {!isUnlocked && (
-            <div ref={lockOverlayRef} className="absolute inset-0 z-10 flex items-center justify-center bg-white/65 backdrop-blur-sm">
-              <div className="space-y-2 text-center">
-                <p className="rounded-full border border-[#E8ECE8] bg-white px-4 py-2 text-sm text-[#111111]">Enter OTP to unlock CoA details</p>
-                <p className="text-xs text-[var(--muted)]">Metrics will reveal instantly after verification.</p>
+            <div ref={lockOverlayRef} className="absolute inset-0 z-10 flex items-center justify-center bg-white/58 p-3 backdrop-blur-md sm:p-6">
+              <div className="w-full max-w-4xl rounded-2xl border border-[#CFECD8] bg-white/92 p-5 shadow-[0_18px_60px_rgba(17,181,178,0.16)] sm:p-6">
+                <h3 className="text-xl font-bold text-[#111111]">Identity Check</h3>
+                <p className="mt-1 text-sm text-[var(--muted)]">Enter mobile number and OTP to unlock full CoA metrics.</p>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+                  <label className="text-sm font-medium text-[#111111]">
+                    Mobile Number
+                    <Input value={mobile} onChange={(event) => setMobile(event.target.value)} type="tel" placeholder="+91 XXXXX XXXXX" className="mt-2 border-[#E8ECE8] bg-white text-[#111111]" />
+                  </label>
+                  <Button type="button" onClick={sendOtp} className="h-11 w-full bg-[var(--green)] text-white hover:bg-[var(--green)]/90 sm:w-auto">
+                    {isSendingOtp ? "Sending..." : "Send OTP"}
+                  </Button>
+                </div>
+
+                {isOtpSent && (
+                  <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+                    <label className="text-sm font-medium text-[#111111]">
+                      Enter OTP
+                      <Input value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))} type="text" placeholder="123456" className="mt-2 border-[#E8ECE8] bg-white text-[#111111] tracking-[0.25em]" />
+                    </label>
+                    <Button type="button" onClick={verifyOtp} className="h-11 w-full bg-[var(--green)] text-white hover:bg-[var(--green)]/90 sm:w-auto">
+                      Verify OTP
+                    </Button>
+                  </div>
+                )}
+
+                {otpError && <p className="mt-3 text-xs text-red-500">{otpError}</p>}
+                <p className="mt-3 text-xs text-[var(--muted)]">CoA details reveal instantly after successful verification.</p>
               </div>
             </div>
           )}
 
           <div className="coa-reveal flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-3xl font-black text-[#111111]">Certificate of Analysis (via Business Central)</h3>
+              <h3 className="text-2xl font-black text-[#111111] sm:text-3xl">Certificate of Analysis (via Business Central)</h3>
               <p className="mt-1 text-sm text-[var(--muted)]">Quality test results from Business Central ERP</p>
             </div>
             <span className="rounded-full bg-[#11b5b2] px-3 py-1 text-xs font-semibold text-white">{DUMMY_COA.status}</span>
           </div>
 
-          <div className="coa-reveal mt-4 flex items-center justify-between border-b border-[#E8ECE8] pb-3 text-sm">
+          <div className="coa-reveal mt-4 flex flex-col gap-1 border-b border-[#E8ECE8] pb-3 text-sm sm:flex-row sm:items-center sm:justify-between">
             <span className="text-[var(--muted)]">Report Date</span>
-            <span className="font-medium text-[#111111]">{DUMMY_COA.reportDate}</span>
+            <span className="font-medium text-[#111111] sm:text-right">{DUMMY_COA.reportDate}</span>
           </div>
 
           <h4 className="coa-reveal mt-4 text-xl font-bold text-[#111111]">Test Parameters</h4>
@@ -365,7 +361,7 @@ export default function Verification() {
           </div>
 
           <div className="coa-reveal mt-4 rounded-2xl border border-[#D9E2DE] bg-[#F7F8F5] p-4 sm:p-5">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <h4 className="text-lg font-bold text-[#111111]">Ingredient Composition Snapshot</h4>
               <span className="rounded-full bg-[#EAF8EF] px-3 py-1 text-xs font-semibold text-[var(--green)]">Batch Profile</span>
             </div>
@@ -415,27 +411,30 @@ export default function Verification() {
         {isUnlocked && <CoachSection />}
 
         {/* SECTION: DISCOUNT (GIFT-BOX UNWRAP + CODE REVEAL) */}
-        {isUnlocked && emailSent && <DiscountSection onReveal={() => setOfferUnlocked(true)} />}
+        {isUnlocked && emailSent && <DiscountSection />}
 
-        {/* SECTION: SHOP CTA (REVEALED AFTER GIFT TAP) */}
-        {isUnlocked && emailSent && offerUnlocked && <CTASection />}
+      </div>
+
+      {/* SECTION: SHOP CTA (ALWAYS VISIBLE NEAR FOOTER) */}
+      <div className="relative z-10 mt-8">
+        <CTASection />
       </div>
 
       {showEmailModal && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/30 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-[#D9E2DE] bg-white p-5 shadow-2xl">
-            <h4 className="text-2xl font-bold text-[#111111]">Send CoA to Email</h4>
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/30 px-4 py-6 backdrop-blur-sm">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-[#D9E2DE] bg-white p-5 shadow-2xl">
+            <h4 className="text-xl font-bold text-[#111111] sm:text-2xl">Send CoA to Email</h4>
             <p className="mt-1 text-sm text-[var(--muted)]">We&apos;ll send the full certificate PDF to your inbox.</p>
             <label className="mt-4 block text-sm font-medium text-[#111111]">
               Email Address
               <Input value={email} onChange={(event) => setEmail(event.target.value)} type="email" placeholder="Enter your email" className="mt-2 border-[#E8ECE8] bg-white text-[#111111]" />
             </label>
             {emailError && <p className="mt-2 text-xs text-red-500">{emailError}</p>}
-            <div className="mt-4 flex gap-2">
-              <Button type="button" variant="outline" onClick={() => setShowEmailModal(false)} className="border-[#D9E2DE] bg-white text-[#111111]">
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+              <Button type="button" variant="outline" onClick={() => setShowEmailModal(false)} className="w-full border-[#D9E2DE] bg-white text-[#111111] sm:w-auto">
                 Cancel
               </Button>
-              <Button type="button" onClick={sendEmailCertificate} className="bg-[#11b5b2] text-white hover:bg-[#11b5b2]/90">
+              <Button type="button" onClick={sendEmailCertificate} className="w-full bg-[#11b5b2] text-white hover:bg-[#11b5b2]/90 sm:w-auto">
                 {isSendingEmail ? "Sending..." : "Send Certificate"}
               </Button>
             </div>
