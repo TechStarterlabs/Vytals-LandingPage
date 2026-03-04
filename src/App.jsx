@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from "rea
 
 import Loader from "@/components/Loader"
 import Navbar from "@/components/Navbar"
+import { Toaster } from "@/components/ui/toaster"
 import { VerificationStoreProvider } from "@/lib/verification-store"
 import Home from "@/pages/Home"
 import Verification from "@/pages/Verification"
@@ -13,9 +14,13 @@ const AdminSidebar = lazy(() => import("@/components/AdminSidebar"))
 const ProtectedRoute = lazy(() => import("@/components/ProtectedRoute"))
 const AdminLogin = lazy(() => import("@/pages/admin/Login"))
 const Dashboard = lazy(() => import("@/pages/admin/Dashboard"))
+const Batches = lazy(() => import("@/pages/admin/Batches"))
+const Serials = lazy(() => import("@/pages/admin/Serials"))
+const ScanLogs = lazy(() => import("@/pages/admin/ScanLogs"))
+const Customers = lazy(() => import("@/pages/admin/Customers"))
+const Rewards = lazy(() => import("@/pages/admin/Rewards"))
 const Products = lazy(() => import("@/pages/admin/Products"))
 const Users = lazy(() => import("@/pages/admin/Users"))
-const Settings = lazy(() => import("@/pages/admin/Settings"))
 
 function ScrollToTopAndHash() {
   const location = useLocation()
@@ -45,7 +50,7 @@ function AppLayout() {
       <main className="relative z-10 flex-1" key={location.pathname}>
         <Outlet />
       </main>
-      {!isHome && (
+      {isHome && (
         <div className="relative z-10">
           <Suspense fallback={null}>
             <Footer />
@@ -73,13 +78,21 @@ function AdminLayout() {
 
 function App() {
   const [showLoader, setShowLoader] = useState(true)
+  const [initialPath] = useState(window.location.pathname)
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setShowLoader(false), 2500)
-    return () => window.clearTimeout(timer)
-  }, [])
+    // Only show loader for home and verify pages
+    const shouldShowLoader = initialPath === "/" || initialPath === "/verify"
+    
+    if (shouldShowLoader) {
+      const timer = window.setTimeout(() => setShowLoader(false), 2500)
+      return () => window.clearTimeout(timer)
+    } else {
+      setShowLoader(false)
+    }
+  }, [initialPath])
 
-  if (showLoader) {
+  if (showLoader && (initialPath === "/" || initialPath === "/verify")) {
     return <Loader />
   }
 
@@ -87,6 +100,7 @@ function App() {
     <VerificationStoreProvider>
       <BrowserRouter>
         <ScrollToTopAndHash />
+        <Toaster />
         <Routes>
           <Route element={<AppLayout />}>
             <Route path="/" element={<Home />} />
@@ -114,9 +128,13 @@ function App() {
           >
             <Route index element={<Navigate replace to="/admin/dashboard" />} />
             <Route path="dashboard" element={<Dashboard />} />
+            <Route path="batches" element={<Batches />} />
+            <Route path="serials" element={<Serials />} />
+            <Route path="scan-logs" element={<ScanLogs />} />
+            <Route path="customers" element={<Customers />} />
+            <Route path="rewards" element={<Rewards />} />
             <Route path="products" element={<Products />} />
             <Route path="users" element={<Users />} />
-            <Route path="settings" element={<Settings />} />
           </Route>
 
           <Route path="*" element={<Navigate replace to="/" />} />

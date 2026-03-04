@@ -8,6 +8,10 @@ const initialState = {
   homeCompleted: false,
   otpVerified: false,
   emailVerified: false,
+  productData: null,
+  userData: null,
+  coaData: null,
+  customerToken: null,
 }
 
 const VerificationStoreContext = createContext(null)
@@ -44,6 +48,18 @@ export function VerificationStoreProvider({ children }) {
       },
       setEmailVerified(verified) {
         setState((prev) => ({ ...prev, emailVerified: verified }))
+      },
+      setProductData(productData) {
+        setState((prev) => ({ ...prev, productData }))
+      },
+      setUserData(userData) {
+        setState((prev) => ({ ...prev, userData }))
+      },
+      setCoaData(coaData) {
+        setState((prev) => ({ ...prev, coaData }))
+      },
+      setCustomerToken(token) {
+        setState((prev) => ({ ...prev, customerToken: token }))
       },
       resetVerification() {
         setState(initialState)

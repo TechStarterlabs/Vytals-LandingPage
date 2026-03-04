@@ -8,6 +8,8 @@ import CoachSection from "@/components/CoachSection"
 import DiscountSection from "@/components/DiscountSection"
 import HeroBackground from "@/components/HeroBackground"
 import { useVerificationStore } from "@/lib/verification-store"
+import { verificationApi } from "@/lib/api"
+import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { fadeUpOnScroll } from "@/utils/animations"
@@ -55,9 +57,17 @@ export default function Verification() {
     setSerialAndBatch,
     setOtpVerified,
     setEmailVerified,
+    setUserData,
+    setCoaData,
+    setCustomerToken,
     otpVerified,
     emailVerified,
+    productData,
+    userData,
+    coaData,
+    customerToken,
   } = useVerificationStore()
+  const { toast } = useToast()
 
   const [batchId, setBatchId] = useState("[BATCH-XXXXX]")
   const [serialNumber, setSerialNumber] = useState("[SN-XXXXXXXX]")
@@ -65,6 +75,7 @@ export default function Verification() {
   const [otp, setOtp] = useState("")
   const [isOtpSent, setIsOtpSent] = useState(false)
   const [isSendingOtp, setIsSendingOtp] = useState(false)
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false)
   const [otpError, setOtpError] = useState("")
   const [isUnlocked, setIsUnlocked] = useState(false)
   const [showEmailModal, setShowEmailModal] = useState(false)
@@ -195,54 +206,132 @@ export default function Verification() {
     )
   }, [isUnlocked])
 
-  const sendOtp = () => {
+  const sendOtp = async () => {
     if (mobile.replace(/\D/g, "").length < 10) {
       setOtpError("Enter a valid mobile number.")
       return
     }
+    
     setOtpError("")
     setIsSendingOtp(true)
-    // TODO: POST /api/otp/send with { mobile, serialNumber, batchId }
-    window.setTimeout(() => {
+    
+    try {
+      const response = await verificationApi.sendOTP(mobile, serialNumber)
+      
+      if (response.success) {
+        setIsOtpSent(true)
+        toast({
+          title: "Success",
+          description: "OTP sent successfully!",
+          variant: "success",
+        })
+      }
+    } catch (error) {
+      console.error('Send OTP error:', error)
+      setOtpError(error.message || "Failed to send OTP. Please try again.")
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send OTP",
+        variant: "destructive",
+      })
+    } finally {
       setIsSendingOtp(false)
-      setIsOtpSent(true)
-    }, 900)
+    }
   }
 
-  const verifyOtp = () => {
-    if (otp !== "123456") {
-      setOtpError("Invalid OTP. Please try again.")
+  const verifyOtp = async () => {
+    if (otp.length !== 6) {
+      setOtpError("Please enter a valid 6-digit OTP.")
       return
     }
+    
     setOtpError("")
-    if (lockOverlayRef.current) {
-      gsap.timeline().to(lockOverlayRef.current, {
-        opacity: 0,
-        scale: 1.04,
-        duration: 0.45,
-        ease: "power2.out",
-        onComplete: () => setIsUnlocked(true),
+    setIsVerifyingOtp(true)
+    
+    try {
+      const response = await verificationApi.verifyOTP(mobile, otp, serialNumber)
+      
+      if (response.success) {
+        const { user, token, verification, coa } = response.data
+        
+        // Store user data, COA data, and customer token
+        setUserData(user)
+        setCoaData(coa)
+        setCustomerToken(token)
+        
+        // Unlock COA section with animation
+        if (lockOverlayRef.current) {
+          gsap.timeline().to(lockOverlayRef.current, {
+            opacity: 0,
+            scale: 1.04,
+            duration: 0.45,
+            ease: "power2.out",
+            onComplete: () => setIsUnlocked(true),
+          })
+        } else {
+          setIsUnlocked(true)
+        }
+        
+        setOtpVerified(true)
+        
+        toast({
+          title: "Success",
+          description: `Verification complete! ${verification.points_awarded} points awarded.`,
+          variant: "success",
+        })
+      }
+    } catch (error) {
+      console.error('Verify OTP error:', error)
+      setOtpError(error.message || "Invalid OTP. Please try again.")
+      toast({
+        title: "Error",
+        description: error.message || "OTP verification failed",
+        variant: "destructive",
       })
-    } else {
-      setIsUnlocked(true)
+    } finally {
+      setIsVerifyingOtp(false)
     }
-    setOtpVerified(true)
   }
 
-  const sendEmailCertificate = () => {
+  const sendEmailCertificate = async () => {
     if (!email.trim().includes("@")) {
       setEmailError("Enter a valid email address.")
       return
     }
+    
     setEmailError("")
     setIsSendingEmail(true)
-    // TODO: POST /api/coa/email with { email, batchId, serialNumber }
-    window.setTimeout(() => {
+    
+    try {
+      console.log('Customer Token:', customerToken) // Debug log
+      const response = await verificationApi.emailCOA(email, batchId, customerToken)
+      
+      if (response.success) {
+        // Update user data with the email
+        if (userData && !userData.email) {
+          setUserData({ ...userData, email })
+        }
+        
+        setEmailSent(true)
+        setEmailVerified(true)
+        setShowEmailModal(false)
+        toast({
+          title: "Success",
+          description: "Certificate sent to your email!",
+          variant: "success",
+        })
+      }
+    } catch (error) {
+      console.error('Email COA error:', error)
+      setEmailError(error.message || "Failed to send email. Please try again.")
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send email",
+        variant: "destructive",
+      })
+    } finally {
       setIsSendingEmail(false)
-      setEmailSent(true)
-      setEmailVerified(true)
-      setShowEmailModal(false)
-    }, 900)
+    }
   }
 
   return (
@@ -265,7 +354,9 @@ export default function Verification() {
           <div className="space-y-3 border-t border-[#E8ECE8] pt-4 text-sm">
             <div className="flex flex-col gap-1 border-b border-[#E8ECE8] pb-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <span className="text-[var(--muted)]">Product Name</span>
-              <span className="break-all font-medium text-[#111111] sm:text-right">{DUMMY_COA.productName}</span>
+              <span className="break-all font-medium text-[#111111] sm:text-right">
+                {productData?.product?.name || "Trial Product"}
+              </span>
             </div>
             <div className="flex flex-col gap-1 border-b border-[#E8ECE8] pb-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <span className="text-[var(--muted)]">Batch Code</span>
@@ -276,8 +367,7 @@ export default function Verification() {
               <span className="break-all font-medium text-[#111111] sm:text-right">{serialNumber}</span>
             </div>
             <div className="rounded-xl border border-[#CFECD8] bg-[#ECFAF1] px-4 py-2 text-[var(--green)]">
-              ✅ Authentic product - verified
-              {/* DYNAMIC: status text from verification API */}
+              ✅ {productData?.isVerified ? "Product already verified" : "Authentic product - verified"}
             </div>
           </div>
         </article>
@@ -306,8 +396,8 @@ export default function Verification() {
                       Enter OTP
                       <Input value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))} type="text" placeholder="123456" className="mt-2 border-[#E8ECE8] bg-white text-[#111111] tracking-[0.25em]" />
                     </label>
-                    <Button type="button" onClick={verifyOtp} className="h-11 w-full bg-[var(--green)] text-white hover:bg-[var(--green)]/90 sm:w-auto">
-                      Verify OTP
+                    <Button type="button" onClick={verifyOtp} disabled={isVerifyingOtp} className="h-11 w-full bg-[var(--green)] text-white hover:bg-[var(--green)]/90 sm:w-auto">
+                      {isVerifyingOtp ? "Verifying..." : "Verify OTP"}
                     </Button>
                   </div>
                 )}
@@ -328,7 +418,9 @@ export default function Verification() {
 
           <div className="coa-reveal mt-4 flex flex-col gap-1 border-b border-[#E8ECE8] pb-3 text-sm sm:flex-row sm:items-center sm:justify-between">
             <span className="text-[var(--muted)]">Report Date</span>
-            <span className="font-medium text-[#111111] sm:text-right">{DUMMY_COA.reportDate}</span>
+            <span className="font-medium text-[#111111] sm:text-right">
+              {coaData?.issue_date || DUMMY_COA.reportDate}
+            </span>
           </div>
 
           <h4 className="coa-reveal mt-4 text-xl font-bold text-[#111111]">Test Parameters</h4>
@@ -399,7 +491,17 @@ export default function Verification() {
 
           {isUnlocked && (
             <div className="coa-reveal mt-4 space-y-3">
-              <Button type="button" onClick={() => setShowEmailModal(true)} className="w-full bg-[#11b5b2] text-white hover:bg-[#11b5b2]/90">
+              <Button 
+                type="button" 
+                onClick={() => {
+                  // Pre-fill email if user has one
+                  if (userData?.email && !email) {
+                    setEmail(userData.email)
+                  }
+                  setShowEmailModal(true)
+                }} 
+                className="w-full bg-[#11b5b2] text-white hover:bg-[#11b5b2]/90"
+              >
                 📧 Email Full CoA PDF
               </Button>
               {emailSent && <p className="text-sm text-[#11b5b2]">Certificate sent to your email.</p>}

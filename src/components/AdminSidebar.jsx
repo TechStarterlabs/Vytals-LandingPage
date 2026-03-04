@@ -1,5 +1,15 @@
 import { useNavigate, useLocation } from "react-router-dom"
-import { LayoutDashboard, Package, Users, Settings, LogOut } from "lucide-react"
+import { 
+  LayoutDashboard, 
+  Package, 
+  Users, 
+  LogOut,
+  Barcode,
+  ListChecks,
+  Gift,
+  UserCog
+} from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 import {
   Sidebar,
   SidebarHeader,
@@ -13,17 +23,26 @@ import { authService } from "@/lib/auth"
 export default function AdminSidebar() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { toast } = useToast()
 
   const handleLogout = () => {
     authService.removeToken()
+    toast({
+      title: "Success",
+      description: "Logged out successfully",
+      variant: "success",
+    })
     navigate("/admin/login")
   }
 
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/admin/dashboard" },
-    { icon: Package, label: "Products", path: "/admin/products" },
-    { icon: Users, label: "Users", path: "/admin/users" },
-    { icon: Settings, label: "Settings", path: "/admin/settings" }
+    { icon: Package, label: "Batches", path: "/admin/batches" },
+    { icon: Barcode, label: "Serial Management", path: "/admin/serials" },
+    { icon: ListChecks, label: "Scan Logs", path: "/admin/scan-logs" },
+    { icon: Users, label: "Customers", path: "/admin/customers" },
+    { icon: Gift, label: "Rewards", path: "/admin/rewards" },
+    { icon: UserCog, label: "Admin Users", path: "/admin/users" }
   ]
 
   return (
