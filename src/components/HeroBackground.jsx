@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react"
 import * as THREE from "three"
 
 export default function HeroBackground({
-  count = 80,
+  count = 50,
   opacity = 0.5,
   size = 0.04,
   className = "pointer-events-none absolute inset-0 z-0",
@@ -17,9 +17,13 @@ export default function HeroBackground({
     const camera = new THREE.PerspectiveCamera(60, mount.clientWidth / mount.clientHeight, 0.1, 100)
     camera.position.z = 5
 
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
+    const renderer = new THREE.WebGLRenderer({ 
+      alpha: true, 
+      antialias: false,
+      powerPreference: "high-performance"
+    })
     renderer.setSize(mount.clientWidth, mount.clientHeight)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
     mount.appendChild(renderer.domElement)
 
     const geometry = new THREE.BufferGeometry()
@@ -39,13 +43,23 @@ export default function HeroBackground({
     scene.add(particles)
 
     let animationId = 0
-    const animate = () => {
+    let lastTime = 0
+    const targetFPS = 30
+    const frameInterval = 1000 / targetFPS
+
+    const animate = (currentTime) => {
       animationId = window.requestAnimationFrame(animate)
+      
+      const deltaTime = currentTime - lastTime
+      if (deltaTime < frameInterval) return
+      
+      lastTime = currentTime - (deltaTime % frameInterval)
+      
       particles.rotation.y += 0.0008
       particles.rotation.x += 0.0004
       renderer.render(scene, camera)
     }
-    animate()
+    animate(0)
 
     const handleResize = () => {
       camera.aspect = mount.clientWidth / mount.clientHeight
@@ -57,12 +71,14 @@ export default function HeroBackground({
     return () => {
       window.cancelAnimationFrame(animationId)
       window.removeEventListener("resize", handleResize)
-      mount.removeChild(renderer.domElement)
+      if (mount.contains(renderer.domElement)) {
+        mount.removeChild(renderer.domElement)
+      }
       geometry.dispose()
       material.dispose()
       renderer.dispose()
     }
-  }, [])
+  }, [count, opacity, size])
 
   return <div ref={mountRef} className={className} aria-hidden="true" />
 }

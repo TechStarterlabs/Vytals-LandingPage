@@ -77,16 +77,15 @@ export default function HeroSection() {
       { opacity: 0, y: 30, scale: 0.98 },
       { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "power3.out", delay: 0.08 },
     )
-    const floatTween = gsap.to(formCardRef.current, { y: -3, duration: 2.3, yoyo: true, repeat: -1, ease: "sine.inOut" })
-    return () => floatTween.kill()
+    // Removed floating animation for better performance
   }, [])
 
   return (
     <section
       id="home"
-      className="relative h-[calc(100vh-5rem)] overflow-hidden bg-[linear-gradient(180deg,rgba(234,246,244,0.92),rgba(246,251,250,0.97))]"
+      className="relative min-h-[calc(100vh-5rem)] overflow-hidden bg-[linear-gradient(180deg,rgba(234,246,244,0.92),rgba(246,251,250,0.97))]"
     >
-      <HeroBackground count={180} opacity={0.9} size={0.055} className="pointer-events-none absolute inset-0 z-[1]" />
+      <HeroBackground count={80} opacity={0.7} size={0.045} className="pointer-events-none absolute inset-0 z-[1]" />
       <div className="relative z-10 mx-auto grid h-full max-w-7xl items-center gap-8 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
         {/* HOME HERO SECTION */}
         <div className="space-y-5">

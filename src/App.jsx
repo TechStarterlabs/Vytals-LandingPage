@@ -1,13 +1,21 @@
-import { useEffect, useState } from "react"
+import { lazy, Suspense, useEffect, useState } from "react"
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom"
 
-import Footer from "@/components/Footer"
-import HeroBackground from "@/components/HeroBackground"
 import Loader from "@/components/Loader"
 import Navbar from "@/components/Navbar"
 import { VerificationStoreProvider } from "@/lib/verification-store"
 import Home from "@/pages/Home"
 import Verification from "@/pages/Verification"
+
+// Lazy load only admin components
+const Footer = lazy(() => import("@/components/Footer"))
+const AdminSidebar = lazy(() => import("@/components/AdminSidebar"))
+const ProtectedRoute = lazy(() => import("@/components/ProtectedRoute"))
+const AdminLogin = lazy(() => import("@/pages/admin/Login"))
+const Dashboard = lazy(() => import("@/pages/admin/Dashboard"))
+const Products = lazy(() => import("@/pages/admin/Products"))
+const Users = lazy(() => import("@/pages/admin/Users"))
+const Settings = lazy(() => import("@/pages/admin/Settings"))
 
 function ScrollToTopAndHash() {
   const location = useLocation()
@@ -32,17 +40,33 @@ function AppLayout() {
   const isVerificationPage = location.pathname === "/verify"
 
   return (
-    <div className="relative min-h-screen bg-[var(--bg)] text-[var(--white)]">
-      <HeroBackground />
+    <div className="relative flex min-h-screen flex-col bg-[var(--bg)] text-[var(--white)]">
       <Navbar compact={isHome || isVerificationPage} />
-      <main className="relative z-10">
+      <main className="relative z-10 flex-1" key={location.pathname}>
         <Outlet />
       </main>
       {!isHome && (
         <div className="relative z-10">
-          <Footer />
+          <Suspense fallback={null}>
+            <Footer />
+          </Suspense>
         </div>
       )}
+    </div>
+  )
+}
+
+function AdminLayout() {
+  return (
+    <div className="flex h-screen bg-background text-foreground">
+      <Suspense fallback={<Loader />}>
+        <AdminSidebar />
+      </Suspense>
+      <main className="flex-1 overflow-auto p-8">
+        <Suspense fallback={<Loader />}>
+          <Outlet />
+        </Suspense>
+      </main>
     </div>
   )
 }
@@ -67,8 +91,35 @@ function App() {
           <Route element={<AppLayout />}>
             <Route path="/" element={<Home />} />
             <Route path="/verify" element={<Verification />} />
-            <Route path="*" element={<Navigate replace to="/" />} />
           </Route>
+
+          <Route
+            path="/admin/login"
+            element={
+              <Suspense fallback={<Loader />}>
+                <AdminLogin />
+              </Suspense>
+            }
+          />
+          
+          <Route
+            path="/admin"
+            element={
+              <Suspense fallback={<Loader />}>
+                <ProtectedRoute>
+                  <AdminLayout />
+                </ProtectedRoute>
+              </Suspense>
+            }
+          >
+            <Route index element={<Navigate replace to="/admin/dashboard" />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="products" element={<Products />} />
+            <Route path="users" element={<Users />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
+
+          <Route path="*" element={<Navigate replace to="/" />} />
         </Routes>
       </BrowserRouter>
     </VerificationStoreProvider>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
-import { Link, useLocation } from "react-router-dom"
-import { Menu, X } from "lucide-react"
+import { Link, useLocation, useNavigate } from "react-router-dom"
+import { Menu , X } from "lucide-react"
 import { gsap } from "gsap"
 
 const LOGO_URL =
@@ -13,9 +13,22 @@ const navItems = [
 
 function Navbar({ compact = false }) {
   const location = useLocation()
+  const navigate = useNavigate()
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [isAnimatingMenu, setIsAnimatingMenu] = useState(false)
+
+  const handleLogoClick = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    // Force navigation by using window.location if on different page
+    if (location.pathname !== "/") {
+      window.location.href = "/"
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" })
+    }
+  }
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50)
@@ -48,9 +61,9 @@ function Navbar({ compact = false }) {
       }`}
     >
       <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link to="/" className="shrink-0">
+        <a href="/" onClick={handleLogoClick} className="shrink-0 cursor-pointer">
           <img src={LOGO_URL} alt="Spunge logo" loading="lazy" className="h-9 w-auto" />
-        </Link>
+        </a>
 
         {!compact && <div className="hidden items-center gap-8 md:flex">
           {navItems.map((item) => (
