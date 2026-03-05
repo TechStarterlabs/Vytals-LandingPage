@@ -131,25 +131,25 @@ export default function HeroSection() {
       <Suspense fallback={null}>
         <HeroBackground count={85} opacity={0.75} size={0.05} className="pointer-events-none absolute inset-0 z-[1]" />
       </Suspense>
-      <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-8 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-2 lg:px-8 lg:py-20">
+      <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 items-center gap-6 px-4 py-8 sm:gap-8 sm:px-6 sm:py-14 lg:grid-cols-2 lg:px-8 lg:py-20">
         {/* HOME HERO SECTION */}
-        <div className="space-y-5">
+        <div className="space-y-4 sm:space-y-5">
           <Badge className="rounded-full border border-[#E8ECE8] bg-[#F7F8F5] px-4 py-2 text-xs text-[#3EBF6A]">
             ✦ Verify Your Product · Serial Authentication
           </Badge>
-          <h1 className="space-y-1 text-5xl font-black leading-[0.95] text-[#111111] sm:text-7xl">
+          <h1 className="space-y-1 text-4xl font-black leading-[0.95] text-[#111111] sm:text-6xl lg:text-7xl">
             <span className="fade-up block [animation-delay:160ms]">Your Product.</span>
             <span className="fade-up block [animation-delay:300ms]">Verified.</span>
             <span className="fade-up block [animation-delay:420ms]">Instantly.</span>
           </h1>
-          <p className="max-w-xl text-base text-[#4f4f4f] sm:text-lg">
+          <p className="max-w-xl text-sm text-[#4f4f4f] sm:text-lg">
             Enter your product&apos;s serial number to continue verification.
           </p>
         </div>
 
         {/* SERIAL INPUT SECTION */}
-        <div className="relative overflow-hidden rounded-3xl border border-[#E8ECE8] bg-[#F7F8F5] p-4 sm:p-6">
-          <form onSubmit={handleSubmit(onSubmit)} ref={formCardRef} className="relative z-10 rounded-2xl border border-[#E8ECE8] bg-white p-4 sm:p-5">
+        <div className="relative w-full overflow-hidden rounded-3xl border border-[#E8ECE8] bg-[#F7F8F5] p-3 sm:p-6">
+          <form onSubmit={handleSubmit(onSubmit)} ref={formCardRef} className="relative z-10 rounded-2xl border border-[#E8ECE8] bg-white p-3.5 sm:p-5">
             <label className="block text-sm font-medium text-[#111111]">
               Serial Number
               <input

@@ -309,11 +309,11 @@ export default function Verification() {
   }
 
   return (
-    <section className="relative overflow-hidden bg-[linear-gradient(180deg,rgba(234,246,244,0.94),rgba(246,251,250,0.96))] px-4 pb-12 pt-24 sm:px-6 sm:pb-14 sm:pt-28 lg:px-8">
+    <section className="relative overflow-hidden bg-[linear-gradient(180deg,rgba(234,246,244,0.94),rgba(246,251,250,0.96))] px-4 pb-0 pt-20 sm:px-6 sm:pb-0 sm:pt-24 lg:px-8 lg:pt-28">
       <Suspense fallback={null}>
         <HeroBackground count={60} opacity={0.6} size={0.04} className="pointer-events-none absolute inset-0 z-0" />
       </Suspense>
-      <div className="relative z-10 mx-auto max-w-6xl space-y-6">
+      <div className="relative z-10 mx-auto max-w-6xl space-y-5 sm:space-y-6">
         {/* SECTION: PAGE HEADER */}
         <header className="verify-heading text-center">
           <h1 className="text-3xl font-black text-[#111111] sm:text-4xl lg:text-5xl">Verify Your Product</h1>
