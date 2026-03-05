@@ -11,6 +11,7 @@ const Home = lazy(() => import("@/pages/Home"))
 const Verification = lazy(() => import("@/pages/Verification"))
 const Footer = lazy(() => import("@/components/Footer"))
 const AdminSidebar = lazy(() => import("@/components/AdminSidebar"))
+const AdminNavbar = lazy(() => import("@/components/AdminNavbar"))
 const ProtectedRoute = lazy(() => import("@/components/ProtectedRoute"))
 const AdminLogin = lazy(() => import("@/pages/admin/Login"))
 const Dashboard = lazy(() => import("@/pages/admin/Dashboard"))
@@ -18,6 +19,8 @@ const Batches = lazy(() => import("@/pages/admin/Batches"))
 const Serials = lazy(() => import("@/pages/admin/Serials"))
 const ScanLogs = lazy(() => import("@/pages/admin/ScanLogs"))
 const Customers = lazy(() => import("@/pages/admin/Customers"))
+const CustomerView = lazy(() => import("@/pages/admin/CustomerView"))
+const CustomerForm = lazy(() => import("@/pages/admin/CustomerForm"))
 const Rewards = lazy(() => import("@/pages/admin/Rewards"))
 const Products = lazy(() => import("@/pages/admin/Products"))
 const Users = lazy(() => import("@/pages/admin/Users"))
@@ -63,14 +66,20 @@ function AppLayout() {
 
 function AdminLayout() {
   return (
-    <div className="flex h-screen bg-background text-foreground">
-      <Suspense fallback={<Loader />}>
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
+      <Suspense fallback={<div className="hidden lg:block w-20 bg-white border-r border-gray-200" />}>
         <AdminSidebar />
       </Suspense>
-      <main className="flex-1 overflow-auto p-8">
-        <Suspense fallback={<Loader />}>
-          <Outlet />
-        </Suspense>
+      <main className="flex-1 overflow-auto w-full lg:w-auto">
+        <div className="p-4 pt-20 lg:pt-6 md:p-8 max-w-[1600px] mx-auto">
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-64">
+              <div className="text-gray-500">Loading...</div>
+            </div>
+          }>
+            <Outlet />
+          </Suspense>
+        </div>
       </main>
     </div>
   )
@@ -124,12 +133,28 @@ function App() {
             <Route index element={<Navigate replace to="/admin/dashboard" />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="batches" element={<Batches />} />
+            <Route path="batches/new" element={<div>Batch Form - Coming Soon</div>} />
+            <Route path="batches/:id" element={<div>Batch View - Coming Soon</div>} />
+            <Route path="batches/:id/edit" element={<div>Batch Form - Coming Soon</div>} />
             <Route path="serials" element={<Serials />} />
+            <Route path="serials/new" element={<div>Serial Form - Coming Soon</div>} />
+            <Route path="serials/:id" element={<div>Serial View - Coming Soon</div>} />
+            <Route path="serials/:id/edit" element={<div>Serial Form - Coming Soon</div>} />
             <Route path="scan-logs" element={<ScanLogs />} />
+            <Route path="scan-logs/:id" element={<div>Scan Log View - Coming Soon</div>} />
             <Route path="customers" element={<Customers />} />
+            <Route path="customers/new" element={<CustomerForm />} />
+            <Route path="customers/:id" element={<CustomerView />} />
+            <Route path="customers/:id/edit" element={<CustomerForm />} />
             <Route path="rewards" element={<Rewards />} />
+            <Route path="rewards/new" element={<div>Reward Form - Coming Soon</div>} />
+            <Route path="rewards/:id" element={<div>Reward View - Coming Soon</div>} />
+            <Route path="rewards/:id/edit" element={<div>Reward Form - Coming Soon</div>} />
             <Route path="products" element={<Products />} />
             <Route path="users" element={<Users />} />
+            <Route path="users/new" element={<div>User Form - Coming Soon</div>} />
+            <Route path="users/:id" element={<div>User View - Coming Soon</div>} />
+            <Route path="users/:id/edit" element={<div>User Form - Coming Soon</div>} />
           </Route>
 
           <Route path="*" element={<Navigate replace to="/" />} />
