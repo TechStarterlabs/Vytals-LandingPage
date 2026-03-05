@@ -7,8 +7,6 @@ class ApiClient {
     const token = options.customToken || authService.getToken()
     const isAdminRoute = endpoint.startsWith('/admin')
     
-    console.log('API Request:', { endpoint, hasCustomToken: !!options.customToken, hasToken: !!token }) // Debug log
-    
     const config = {
       ...options,
       headers: {

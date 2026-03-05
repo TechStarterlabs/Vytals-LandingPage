@@ -86,9 +86,9 @@ export default function HeroSection() {
   const handleSerialFocus = () => {
     if (!formCardRef.current) return
     gsap.to(formCardRef.current, {
-      boxShadow: "0 16px 45px rgba(17, 181, 178, 0.18)",
-      borderColor: "rgba(17, 181, 178, 0.45)",
-      duration: 0.25,
+      boxShadow: "0 12px 35px rgba(17, 181, 178, 0.15)",
+      borderColor: "rgba(17, 181, 178, 0.4)",
+      duration: 0.2,
       ease: "power2.out",
     })
   }
@@ -98,27 +98,27 @@ export default function HeroSection() {
     gsap.to(formCardRef.current, {
       boxShadow: "0 0 0 rgba(0,0,0,0)",
       borderColor: "#E8ECE8",
-      duration: 0.3,
+      duration: 0.2,
       ease: "power2.out",
     })
   }
 
   const handleButtonHover = () => {
     if (!buttonRef.current) return
-    gsap.to(buttonRef.current, { y: -2, scale: 1.01, duration: 0.2, ease: "power2.out" })
+    gsap.to(buttonRef.current, { y: -1, scale: 1.005, duration: 0.15, ease: "power2.out" })
   }
 
   const handleButtonLeave = () => {
     if (!buttonRef.current) return
-    gsap.to(buttonRef.current, { y: 0, scale: 1, duration: 0.2, ease: "power2.out" })
+    gsap.to(buttonRef.current, { y: 0, scale: 1, duration: 0.15, ease: "power2.out" })
   }
 
   useEffect(() => {
     if (!formCardRef.current) return
     gsap.fromTo(
       formCardRef.current,
-      { opacity: 0, y: 30, scale: 0.98 },
-      { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "power3.out", delay: 0.08 },
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", delay: 0.05 },
     )
   }, [])
 
@@ -127,7 +127,7 @@ export default function HeroSection() {
       id="home"
       className="relative min-h-[calc(100vh-5rem)] overflow-hidden bg-[linear-gradient(180deg,rgba(234,246,244,0.92),rgba(246,251,250,0.97))]"
     >
-      <HeroBackground count={80} opacity={0.7} size={0.045} className="pointer-events-none absolute inset-0 z-[1]" />
+      <HeroBackground count={50} opacity={0.6} size={0.04} className="pointer-events-none absolute inset-0 z-[1]" />
       <div className="relative z-10 mx-auto grid h-full max-w-7xl items-center gap-8 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
         {/* HOME HERO SECTION */}
         <div className="space-y-5">

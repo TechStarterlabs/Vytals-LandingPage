@@ -1,18 +1,18 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, lazy, Suspense } from "react"
 import { useSearchParams } from "react-router-dom"
 import { gsap } from "gsap"
-import { ScrollTrigger } from "gsap/ScrollTrigger"
 
-import CTASection from "@/components/CTASection"
-import CoachSection from "@/components/CoachSection"
-import DiscountSection from "@/components/DiscountSection"
 import HeroBackground from "@/components/HeroBackground"
 import { useVerificationStore } from "@/lib/verification-store"
 import { verificationApi } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { fadeUpOnScroll } from "@/utils/animations"
+
+// Lazy load heavy components
+const CTASection = lazy(() => import("@/components/CTASection"))
+const CoachSection = lazy(() => import("@/components/CoachSection"))
+const DiscountSection = lazy(() => import("@/components/DiscountSection"))
 
 const DUMMY_COA = {
   productName: "Trial Product",
@@ -117,10 +117,14 @@ export default function Verification() {
   }, [searchParams, setSerialAndBatch, storedBatch, storedSerial])
 
   useEffect(() => {
-    fadeUpOnScroll(".verify-heading")
-    fadeUpOnScroll(".verify-card", { stagger: 0.08 })
-    return () => {
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill())
+    // Only animate on initial load, not on every scroll
+    const elements = document.querySelectorAll(".verify-heading, .verify-card")
+    if (elements.length > 0) {
+      gsap.fromTo(
+        elements,
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.04 }
+      )
     }
   }, [])
 
@@ -131,79 +135,45 @@ export default function Verification() {
   useEffect(() => {
     if (!isUnlocked || !coaSectionRef.current) return
 
-    setMetricValues({
-      purity: 0,
-      heavyMetals: 0,
-      moisture: 0,
-      ph: 0,
-      microbial: 0,
-    })
-    setIngredientValues({
-      botanicalBlend: 0,
-      activeCompound: 0,
-      bioavailability: 0,
-    })
-
-    const revealTimeline = gsap.timeline()
-    revealTimeline.fromTo(
-      ".coa-reveal",
-      { opacity: 0, y: 26, scale: 0.985 },
-      { opacity: 1, y: 0, scale: 1, duration: 0.52, ease: "power3.out", stagger: 0.07 },
-    )
-
-    const counters = {
-      purity: 0,
-      heavyMetals: 0,
-      moisture: 0,
-      ph: 0,
-      microbial: 0,
+    // Simplified animation - just reveal, no complex counters
+    const elements = document.querySelectorAll(".coa-reveal")
+    if (elements.length > 0) {
+      gsap.fromTo(
+        elements,
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.3, ease: "power2.out", stagger: 0.03 }
+      )
     }
 
-    gsap.to(counters, {
+    // Set final values immediately
+    setMetricValues({
       purity: METRIC_TARGETS.purity,
       heavyMetals: METRIC_TARGETS.heavyMetals,
       moisture: METRIC_TARGETS.moisture,
       ph: METRIC_TARGETS.ph,
       microbial: METRIC_TARGETS.microbial,
-      delay: 0.15,
-      duration: 1.55,
-      ease: "power2.out",
-      onUpdate: () => {
-        setMetricValues({
-          purity: Number(counters.purity.toFixed(1)),
-          heavyMetals: Number(counters.heavyMetals.toFixed(0)),
-          moisture: Number(counters.moisture.toFixed(1)),
-          ph: Number(counters.ph.toFixed(1)),
-          microbial: Number(counters.microbial.toFixed(0)),
-        })
-      },
     })
 
-    const ingredientCounters = {
-      botanicalBlend: 0,
-      activeCompound: 0,
-      bioavailability: 0,
-    }
-    gsap.to(ingredientCounters, {
+    setIngredientValues({
       botanicalBlend: INGREDIENT_TARGETS.botanicalBlend,
       activeCompound: INGREDIENT_TARGETS.activeCompound,
       bioavailability: INGREDIENT_TARGETS.bioavailability,
-      delay: 0.25,
-      duration: 1.2,
-      ease: "power2.out",
-      onUpdate: () => {
-        setIngredientValues({
-          botanicalBlend: Number(ingredientCounters.botanicalBlend.toFixed(0)),
-          activeCompound: Number(ingredientCounters.activeCompound.toFixed(0)),
-          bioavailability: Number(ingredientCounters.bioavailability.toFixed(0)),
-        })
-      },
     })
-    gsap.fromTo(
-      ".ingredient-fill",
-      { width: "0%" },
-      { width: (_, target) => target.getAttribute("data-width"), duration: 1.05, ease: "power2.out", stagger: 0.09 },
-    )
+
+    // Simple width animation for progress bars
+    const fills = document.querySelectorAll(".ingredient-fill")
+    if (fills.length > 0) {
+      gsap.fromTo(
+        fills,
+        { width: "0%" },
+        { 
+          width: (_, target) => target.getAttribute("data-width"), 
+          duration: 0.6, 
+          ease: "power2.out", 
+          stagger: 0.06 
+        }
+      )
+    }
   }, [isUnlocked])
 
   const sendOtp = async () => {
@@ -303,7 +273,6 @@ export default function Verification() {
     setIsSendingEmail(true)
     
     try {
-      console.log('Customer Token:', customerToken) // Debug log
       const response = await verificationApi.emailCOA(email, batchId, customerToken)
       
       if (response.success) {
@@ -336,7 +305,7 @@ export default function Verification() {
 
   return (
     <section className="relative overflow-hidden bg-[linear-gradient(180deg,rgba(234,246,244,0.94),rgba(246,251,250,0.96))] px-4 pb-12 pt-24 sm:px-6 sm:pb-14 sm:pt-28 lg:px-8">
-      <HeroBackground count={130} opacity={0.75} size={0.05} className="pointer-events-none absolute inset-0 z-0" />
+      <HeroBackground count={60} opacity={0.6} size={0.04} className="pointer-events-none absolute inset-0 z-0" />
       <div className="relative z-10 mx-auto max-w-6xl space-y-6">
         {/* SECTION: PAGE HEADER */}
         <header className="verify-heading text-center">
@@ -510,16 +479,26 @@ export default function Verification() {
         </article>
 
         {/* SECTION: COACH (UNLOCKED AFTER OTP) */}
-        {isUnlocked && <CoachSection />}
+        {isUnlocked && (
+          <Suspense fallback={<div className="h-32" />}>
+            <CoachSection />
+          </Suspense>
+        )}
 
         {/* SECTION: DISCOUNT (GIFT-BOX UNWRAP + CODE REVEAL) */}
-        {isUnlocked && emailSent && <DiscountSection />}
+        {isUnlocked && emailSent && (
+          <Suspense fallback={<div className="h-32" />}>
+            <DiscountSection />
+          </Suspense>
+        )}
 
       </div>
 
       {/* SECTION: SHOP CTA (ALWAYS VISIBLE NEAR FOOTER) */}
       <div className="relative z-10 mt-8">
-        <CTASection />
+        <Suspense fallback={<div className="h-48" />}>
+          <CTASection />
+        </Suspense>
       </div>
 
       {showEmailModal && (

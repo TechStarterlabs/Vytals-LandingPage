@@ -50,7 +50,7 @@ function AppLayout() {
       <main className="relative z-10 flex-1" key={location.pathname}>
         <Outlet />
       </main>
-      {isHome && (
+      {(isHome || isVerificationPage) && (
         <div className="relative z-10">
           <Suspense fallback={null}>
             <Footer />
@@ -85,7 +85,7 @@ function App() {
     const shouldShowLoader = initialPath === "/" || initialPath === "/verify"
     
     if (shouldShowLoader) {
-      const timer = window.setTimeout(() => setShowLoader(false), 2500)
+      const timer = window.setTimeout(() => setShowLoader(false), 1500) // Reduced from 2500ms
       return () => window.clearTimeout(timer)
     } else {
       setShowLoader(false)
