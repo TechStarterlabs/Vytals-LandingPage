@@ -85,11 +85,15 @@ export default function AdminLogin() {
                     message: "Invalid email address"
                   }
                 })}
-                className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                className={`mt-1 w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+                  errors.email 
+                    ? 'border-red-500 focus:ring-red-500 bg-red-50' 
+                    : 'border-gray-300 focus:ring-primary bg-background'
+                }`}
                 placeholder="admin@vytals.com"
               />
               {errors.email && (
-                <p className="mt-1 text-sm text-destructive">{errors.email.message}</p>
+                <p className="mt-1 text-sm text-red-600 font-medium">{errors.email.message}</p>
               )}
             </div>
 
@@ -107,18 +111,27 @@ export default function AdminLogin() {
                     message: "Password must be at least 6 characters"
                   }
                 })}
-                className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                className={`mt-1 w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+                  errors.password 
+                    ? 'border-red-500 focus:ring-red-500 bg-red-50' 
+                    : 'border-gray-300 focus:ring-primary bg-background'
+                }`}
                 placeholder="••••••••"
               />
               {errors.password && (
-                <p className="mt-1 text-sm text-destructive">{errors.password.message}</p>
+                <p className="mt-1 text-sm text-red-600 font-medium">{errors.password.message}</p>
               )}
             </div>
           </div>
 
           {errors.root && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-              {errors.root.message}
+            <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+              <div className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+                <span className="font-medium">{errors.root.message}</span>
+              </div>
             </div>
           )}
 
