@@ -27,7 +27,7 @@ export default function Users() {
 
   const fetchUsers = async () => {
     try {
-      const data = await apiClient.get('/api/v1/admin/users')
+      const data = await apiClient.get('/admin/users')
       setUsers(data.data.users)
     } catch (err) {
       console.error('Failed to fetch users:', err)
@@ -38,7 +38,7 @@ export default function Users() {
 
   const fetchRoles = async () => {
     try {
-      const data = await apiClient.get('/api/v1/admin/roles')
+      const data = await apiClient.get('/admin/roles')
       setRoles(data.data.roles)
     } catch (err) {
       console.error('Failed to fetch roles:', err)
@@ -81,7 +81,7 @@ export default function Users() {
 
     try {
       if (editingUser) {
-        await apiClient.put(`/api/v1/admin/users/${editingUser.user_id}`, {
+        await apiClient.put(`/admin/users/${editingUser.user_id}`, {
           name: formData.name,
           email: formData.email,
           role_id: parseInt(formData.role_id)
@@ -92,7 +92,7 @@ export default function Users() {
           variant: "success",
         })
       } else {
-        await apiClient.post('/api/v1/admin/users', {
+        await apiClient.post('/admin/users', {
           ...formData,
           role_id: parseInt(formData.role_id)
         })
@@ -119,7 +119,7 @@ export default function Users() {
     if (!confirm('Are you sure you want to delete this user?')) return
 
     try {
-      await apiClient.delete(`/api/v1/admin/users/${userId}`)
+      await apiClient.delete(`/admin/users/${userId}`)
       toast({
         title: "Success",
         description: "User deleted successfully!",

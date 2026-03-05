@@ -16,7 +16,7 @@ export default function Dashboard() {
 
   const fetchStats = async () => {
     try {
-      const data = await apiClient.get('/api/v1/admin/stats')
+      const data = await apiClient.get('/admin/stats')
       setStats(data.data)
     } catch (err) {
       console.error('Failed to fetch stats:', err)
