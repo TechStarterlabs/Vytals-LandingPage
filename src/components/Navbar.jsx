@@ -16,7 +16,6 @@ function Navbar({ compact = false }) {
   const navigate = useNavigate()
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [isAnimatingMenu, setIsAnimatingMenu] = useState(false)
 
   const handleLogoClick = (e) => {
     e.preventDefault()
@@ -24,7 +23,7 @@ function Navbar({ compact = false }) {
     
     // Force navigation by using window.location if on different page
     if (location.pathname !== "/") {
-      window.location.href = "/"
+      navigate("/")
     } else {
       window.scrollTo({ top: 0, behavior: "smooth" })
     }
@@ -38,21 +37,22 @@ function Navbar({ compact = false }) {
   }, [])
 
   useEffect(() => {
-    setMenuOpen(false)
+    if (menuOpen) setMenuOpen(false)
   }, [location.pathname, location.hash])
 
   useEffect(() => {
     const panel = document.querySelector(".mobile-nav-panel")
-    if (!panel || compact || isAnimatingMenu) return
-    setIsAnimatingMenu(true)
+    if (!panel || compact) return
 
     if (menuOpen) {
-      gsap.fromTo(panel, { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.28, ease: "power2.out", onComplete: () => setIsAnimatingMenu(false) })
+      gsap.killTweensOf(panel)
+      gsap.fromTo(panel, { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.28, ease: "power2.out" })
       return
     }
 
-    gsap.to(panel, { opacity: 0, y: -8, duration: 0.2, ease: "power2.in", onComplete: () => setIsAnimatingMenu(false) })
-  }, [compact, isAnimatingMenu, menuOpen])
+    gsap.killTweensOf(panel)
+    gsap.to(panel, { opacity: 0, y: -8, duration: 0.2, ease: "power2.in" })
+  }, [compact, menuOpen])
 
   return (
     <header

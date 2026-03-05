@@ -24,7 +24,7 @@ export default function AdminLogin() {
 
   const onSubmit = async (data) => {
     try {
-      const response = await fetch(`${API_URL}/api/v1/admin/login`, {
+      const response = await fetch(`${API_URL}/admin/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

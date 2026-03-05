@@ -1,14 +1,14 @@
-import { lazy, Suspense, useEffect, useState } from "react"
+import { lazy, Suspense, useEffect } from "react"
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom"
 
 import Loader from "@/components/Loader"
 import Navbar from "@/components/Navbar"
 import { Toaster } from "@/components/ui/toaster"
 import { VerificationStoreProvider } from "@/lib/verification-store"
-import Home from "@/pages/Home"
-import Verification from "@/pages/Verification"
 
 // Lazy load only admin components
+const Home = lazy(() => import("@/pages/Home"))
+const Verification = lazy(() => import("@/pages/Verification"))
 const Footer = lazy(() => import("@/components/Footer"))
 const AdminSidebar = lazy(() => import("@/components/AdminSidebar"))
 const ProtectedRoute = lazy(() => import("@/components/ProtectedRoute"))
@@ -77,25 +77,6 @@ function AdminLayout() {
 }
 
 function App() {
-  const [showLoader, setShowLoader] = useState(true)
-  const [initialPath] = useState(window.location.pathname)
-
-  useEffect(() => {
-    // Only show loader for home and verify pages
-    const shouldShowLoader = initialPath === "/" || initialPath === "/verify"
-    
-    if (shouldShowLoader) {
-      const timer = window.setTimeout(() => setShowLoader(false), 1500) // Reduced from 2500ms
-      return () => window.clearTimeout(timer)
-    } else {
-      setShowLoader(false)
-    }
-  }, [initialPath])
-
-  if (showLoader && (initialPath === "/" || initialPath === "/verify")) {
-    return <Loader />
-  }
-
   return (
     <VerificationStoreProvider>
       <BrowserRouter>
@@ -103,8 +84,22 @@ function App() {
         <Toaster />
         <Routes>
           <Route element={<AppLayout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/verify" element={<Verification />} />
+            <Route
+              path="/"
+              element={
+                <Suspense fallback={<Loader />}>
+                  <Home />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/verify"
+              element={
+                <Suspense fallback={<Loader />}>
+                  <Verification />
+                </Suspense>
+              }
+            />
           </Route>
 
           <Route

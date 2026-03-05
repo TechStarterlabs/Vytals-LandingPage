@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react"
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
 
 const STORAGE_KEY = "spunge-verification-state-v1"
 
@@ -17,55 +17,72 @@ const initialState = {
 const VerificationStoreContext = createContext(null)
 
 export function VerificationStoreProvider({ children }) {
-  const [state, setState] = useState(initialState)
-
-  useEffect(() => {
+  const [state, setState] = useState(() => {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY)
-      if (!raw) return
+      if (!raw) return initialState
       const parsed = JSON.parse(raw)
-      setState((prev) => ({ ...prev, ...parsed }))
+      return { ...initialState, ...parsed }
     } catch {
-      // Ignore malformed local storage payload.
+      // Ignore malformed local storage payload and use defaults.
+      return initialState
     }
-  }, [])
+  })
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   }, [state])
 
+  const setSerialAndBatch = useCallback((serialNumber, batchId) => {
+    setState((prev) => ({ ...prev, serialNumber, batchId }))
+  }, [])
+
+  const setHomeCompleted = useCallback((completed) => {
+    setState((prev) => ({ ...prev, homeCompleted: completed }))
+  }, [])
+
+  const setOtpVerified = useCallback((verified) => {
+    setState((prev) => ({ ...prev, otpVerified: verified }))
+  }, [])
+
+  const setEmailVerified = useCallback((verified) => {
+    setState((prev) => ({ ...prev, emailVerified: verified }))
+  }, [])
+
+  const setProductData = useCallback((productData) => {
+    setState((prev) => ({ ...prev, productData }))
+  }, [])
+
+  const setUserData = useCallback((userData) => {
+    setState((prev) => ({ ...prev, userData }))
+  }, [])
+
+  const setCoaData = useCallback((coaData) => {
+    setState((prev) => ({ ...prev, coaData }))
+  }, [])
+
+  const setCustomerToken = useCallback((token) => {
+    setState((prev) => ({ ...prev, customerToken: token }))
+  }, [])
+
+  const resetVerification = useCallback(() => {
+    setState(initialState)
+  }, [])
+
   const value = useMemo(
     () => ({
       ...state,
-      setSerialAndBatch(serialNumber, batchId) {
-        setState((prev) => ({ ...prev, serialNumber, batchId }))
-      },
-      setHomeCompleted(completed) {
-        setState((prev) => ({ ...prev, homeCompleted: completed }))
-      },
-      setOtpVerified(verified) {
-        setState((prev) => ({ ...prev, otpVerified: verified }))
-      },
-      setEmailVerified(verified) {
-        setState((prev) => ({ ...prev, emailVerified: verified }))
-      },
-      setProductData(productData) {
-        setState((prev) => ({ ...prev, productData }))
-      },
-      setUserData(userData) {
-        setState((prev) => ({ ...prev, userData }))
-      },
-      setCoaData(coaData) {
-        setState((prev) => ({ ...prev, coaData }))
-      },
-      setCustomerToken(token) {
-        setState((prev) => ({ ...prev, customerToken: token }))
-      },
-      resetVerification() {
-        setState(initialState)
-      },
+      setSerialAndBatch,
+      setHomeCompleted,
+      setOtpVerified,
+      setEmailVerified,
+      setProductData,
+      setUserData,
+      setCoaData,
+      setCustomerToken,
+      resetVerification,
     }),
-    [state],
+    [state, resetVerification, setCoaData, setCustomerToken, setEmailVerified, setHomeCompleted, setOtpVerified, setProductData, setSerialAndBatch, setUserData],
   )
 
   return <VerificationStoreContext.Provider value={value}>{children}</VerificationStoreContext.Provider>

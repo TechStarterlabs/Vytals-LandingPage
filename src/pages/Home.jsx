@@ -1,21 +1,16 @@
-import { useEffect } from "react"
-import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { lazy, Suspense } from "react"
 
 import HeroSection from "@/components/HeroSection"
-import { fadeUpOnScroll } from "@/utils/animations"
+
+const CTASection = lazy(() => import("@/components/CTASection"))
 
 function Home() {
-  useEffect(() => {
-    fadeUpOnScroll(".section-heading")
-
-    return () => {
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill())
-    }
-  }, [])
-
   return (
     <>
       <HeroSection />
+      <Suspense fallback={<div className="h-48" />}>
+        <CTASection fullBleed />
+      </Suspense>
     </>
   )
 }

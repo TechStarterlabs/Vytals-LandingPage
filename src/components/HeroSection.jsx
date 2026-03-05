@@ -1,13 +1,14 @@
-import { useEffect, useRef } from "react"
+import { lazy, Suspense, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { gsap } from "gsap"
 
-import HeroBackground from "@/components/HeroBackground"
 import { useVerificationStore } from "@/lib/verification-store"
 import { verificationApi } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
+
+const HeroBackground = lazy(() => import("@/components/HeroBackground"))
 
 export default function HeroSection() {
   const navigate = useNavigate()
@@ -35,13 +36,14 @@ export default function HeroSection() {
       const response = await verificationApi.verifyProduct(normalizedSerial)
       
       if (response.success) {
-        const { product, batch, serial_number } = response.data
+        const { product, batch, serial_number: serialPayload } = response.data
+        const serialValue = serialPayload?.serial_number || normalizedSerial
         
         // Store product data in verification store
         setProductData({
           product,
           batch,
-          serial: serial_number,
+          serial: serialValue,
           isVerified: response.data.is_verified,
           isFirstScan: response.data.is_first_scan
         })
@@ -71,7 +73,6 @@ export default function HeroSection() {
         }, 550)
       }
     } catch (error) {
-      console.error('Verification error:', error)
       setError("serialNumber", {
         message: error.message || "Invalid serial number. Please check and try again."
       })
@@ -125,10 +126,12 @@ export default function HeroSection() {
   return (
     <section
       id="home"
-      className="relative min-h-[calc(100vh-5rem)] overflow-hidden bg-[linear-gradient(180deg,rgba(234,246,244,0.92),rgba(246,251,250,0.97))]"
+      className="relative overflow-hidden bg-[linear-gradient(180deg,rgba(234,246,244,0.92),rgba(246,251,250,0.97))]"
     >
-      <HeroBackground count={50} opacity={0.6} size={0.04} className="pointer-events-none absolute inset-0 z-[1]" />
-      <div className="relative z-10 mx-auto grid h-full max-w-7xl items-center gap-8 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
+      <Suspense fallback={null}>
+        <HeroBackground count={85} opacity={0.75} size={0.05} className="pointer-events-none absolute inset-0 z-[1]" />
+      </Suspense>
+      <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-8 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-2 lg:px-8 lg:py-20">
         {/* HOME HERO SECTION */}
         <div className="space-y-5">
           <Badge className="rounded-full border border-[#E8ECE8] bg-[#F7F8F5] px-4 py-2 text-xs text-[#3EBF6A]">

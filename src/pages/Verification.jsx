@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, lazy, Suspense } from "react"
 import { useSearchParams } from "react-router-dom"
 import { gsap } from "gsap"
 
-import HeroBackground from "@/components/HeroBackground"
 import { useVerificationStore } from "@/lib/verification-store"
 import { verificationApi } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
@@ -10,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 // Lazy load heavy components
+const HeroBackground = lazy(() => import("@/components/HeroBackground"))
 const CTASection = lazy(() => import("@/components/CTASection"))
 const CoachSection = lazy(() => import("@/components/CoachSection"))
 const DiscountSection = lazy(() => import("@/components/DiscountSection"))
@@ -110,7 +110,15 @@ export default function Verification() {
       const nextBatch = decoded?.b || (decoded?.s ? getFallbackBatch(decoded.s) : storedBatch)
       if (nextSerial) setSerialNumber(nextSerial)
       if (nextBatch) setBatchId(nextBatch)
-      if (nextSerial || nextBatch) setSerialAndBatch(nextSerial || serialNumber, nextBatch || batchId)
+
+      const serialToStore = nextSerial || storedSerial
+      const batchToStore = nextBatch || storedBatch
+      if (
+        (serialToStore && serialToStore !== storedSerial) ||
+        (batchToStore && batchToStore !== storedBatch)
+      ) {
+        setSerialAndBatch(serialToStore || "", batchToStore || "")
+      }
     } catch {
       // Invalid ref payload, keep placeholders.
     }
@@ -197,7 +205,6 @@ export default function Verification() {
         })
       }
     } catch (error) {
-      console.error('Send OTP error:', error)
       setOtpError(error.message || "Failed to send OTP. Please try again.")
       toast({
         title: "Error",
@@ -251,7 +258,6 @@ export default function Verification() {
         })
       }
     } catch (error) {
-      console.error('Verify OTP error:', error)
       setOtpError(error.message || "Invalid OTP. Please try again.")
       toast({
         title: "Error",
@@ -291,7 +297,6 @@ export default function Verification() {
         })
       }
     } catch (error) {
-      console.error('Email COA error:', error)
       setEmailError(error.message || "Failed to send email. Please try again.")
       toast({
         title: "Error",
@@ -305,7 +310,9 @@ export default function Verification() {
 
   return (
     <section className="relative overflow-hidden bg-[linear-gradient(180deg,rgba(234,246,244,0.94),rgba(246,251,250,0.96))] px-4 pb-12 pt-24 sm:px-6 sm:pb-14 sm:pt-28 lg:px-8">
-      <HeroBackground count={60} opacity={0.6} size={0.04} className="pointer-events-none absolute inset-0 z-0" />
+      <Suspense fallback={null}>
+        <HeroBackground count={60} opacity={0.6} size={0.04} className="pointer-events-none absolute inset-0 z-0" />
+      </Suspense>
       <div className="relative z-10 mx-auto max-w-6xl space-y-6">
         {/* SECTION: PAGE HEADER */}
         <header className="verify-heading text-center">
@@ -495,9 +502,9 @@ export default function Verification() {
       </div>
 
       {/* SECTION: SHOP CTA (ALWAYS VISIBLE NEAR FOOTER) */}
-      <div className="relative z-10 mt-8">
+      <div className="relative z-10 mt-8 -mx-4 sm:-mx-6 lg:-mx-8">
         <Suspense fallback={<div className="h-48" />}>
-          <CTASection />
+          <CTASection fullBleed />
         </Suspense>
       </div>
 

@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button"
 
-function CTASection() {
+function CTASection({ fullBleed = false }) {
   return (
     <section
       id="store"
       className="relative w-full bg-[linear-gradient(rgba(234,246,244,0.94),rgba(234,246,244,0.92)),url('https://cdn.shopify.com/s/files/1/0724/4831/1464/files/Rectangle_8990.png?v=1762844508')] bg-cover bg-center py-14 sm:py-16 lg:py-20"
+      data-full-bleed={fullBleed ? "true" : "false"}
     >
       <div className="mx-auto w-full max-w-5xl px-4 text-center sm:px-6 lg:px-8">
         <p className="text-xs uppercase tracking-[0.26em] text-[var(--green)]">SPUNGE STORE</p>

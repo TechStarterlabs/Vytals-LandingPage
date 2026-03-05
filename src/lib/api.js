@@ -19,23 +19,19 @@ class ApiClient {
     // Remove customToken from config as it's not a valid fetch option
     delete config.customToken
 
-    try {
-      const response = await fetch(`${API_URL}${endpoint}`, config)
-      const data = await response.json()
+    const response = await fetch(`${API_URL}${endpoint}`, config)
+    const data = await response.json()
 
-      if (!response.ok) {
-        // Only redirect to login for admin routes with 401 errors
-        if (response.status === 401 && isAdminRoute) {
-          authService.removeToken()
-          window.location.href = '/admin/login'
-        }
-        throw new Error(data.message || 'Request failed')
+    if (!response.ok) {
+      // Only redirect to login for admin routes with 401 errors
+      if (response.status === 401 && isAdminRoute) {
+        authService.removeToken()
+        window.location.href = '/admin/login'
       }
-
-      return data
-    } catch (error) {
-      throw error
+      throw new Error(data.message || 'Request failed')
     }
+
+    return data
   }
 
   get(endpoint, customToken = null) {
