@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react"
 import { Search, Download, Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 export default function DataTable({ 
@@ -11,7 +10,8 @@ export default function DataTable({
   onAdd,
   addButtonText = "Add New",
   showAddButton = true,
-  exportFileName = "data"
+  exportFileName = "data",
+  customActions
 }) {
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
@@ -61,15 +61,17 @@ export default function DataTable({
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">{title}</h1>
           {subtitle && <p className="text-sm text-gray-500 mt-2">{subtitle}</p>}
         </div>
-        {showAddButton && (
-          <Button 
-            onClick={onAdd} 
-            className="bg-[#338291] hover:bg-[#2a6d7a] text-white shadow-md hover:shadow-lg transition-all px-6 py-2.5 w-full sm:w-auto flex items-center justify-center gap-2"
+        {customActions ? (
+          customActions
+        ) : showAddButton ? (
+          <button
+            onClick={onAdd}
+            className="px-4 py-2 bg-[#338291] hover:bg-[#2a6d7a] text-white rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
             {addButtonText}
-          </Button>
-        )}
+          </button>
+        ) : null}
       </div>
 
       {/* Toolbar */}
@@ -88,15 +90,13 @@ export default function DataTable({
         </div>
         
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
+          <button
             onClick={exportToCSV}
-            className="border-gray-300 hover:bg-gray-50 shadow-sm flex-1 sm:flex-none"
+            className="px-3 py-1.5 border border-gray-300 rounded-md hover:bg-gray-50 shadow-sm flex items-center gap-2 text-sm"
           >
-            <Download className="h-4 w-4 sm:mr-2" />
+            <Download className="h-4 w-4" />
             <span className="hidden sm:inline">Export Excel</span>
-          </Button>
+          </button>
         </div>
       </div>
 
@@ -170,15 +170,13 @@ export default function DataTable({
           </div>
           
           <div className="flex items-center justify-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              className="border-gray-300 disabled:opacity-50"
+              className="px-3 py-1.5 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             >
               Previous
-            </Button>
+            </button>
             
             <div className="flex items-center gap-1">
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -209,15 +207,13 @@ export default function DataTable({
               })}
             </div>
             
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
-              className="border-gray-300 disabled:opacity-50"
+              className="px-3 py-1.5 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             >
               Next
-            </Button>
+            </button>
           </div>
         </div>
       </div>

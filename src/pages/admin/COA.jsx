@@ -149,25 +149,7 @@ export default function COA() {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Action Buttons */}
-      <div className="flex gap-3">
-        <button
-          onClick={() => navigate('/admin/coa/new')}
-          className="px-4 py-2 bg-[#338291] hover:bg-[#2a6d7a] text-white rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2"
-        >
-          <span className="text-lg">+</span>
-          Add Single COA
-        </button>
-        <button
-          onClick={() => navigate('/admin/coa/bulk')}
-          className="px-4 py-2 bg-gradient-to-r from-[#338291] to-[#2a6d7a] hover:from-[#2a6d7a] hover:to-[#1f5460] text-white rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2"
-        >
-          <Upload className="h-4 w-4" />
-          Bulk Upload
-        </button>
-      </div>
-
+    <div>
       <DataTable
         title="Certificates of Analysis (COA)"
         subtitle="Manage COA documents for batches"
@@ -175,6 +157,24 @@ export default function COA() {
         data={coas}
         showAddButton={false}
         exportFileName="coa-list"
+        customActions={
+          <div className="flex gap-3">
+            <button
+              onClick={() => navigate('/admin/coa/new')}
+              className="px-4 py-2 bg-[#338291] hover:bg-[#2a6d7a] text-white rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+            >
+              <span className="text-lg">+</span>
+              Add Single COA
+            </button>
+            <button
+              onClick={() => navigate('/admin/coa/bulk')}
+              className="px-4 py-2 bg-white hover:bg-gray-50 text-[#338291] border-2 border-[#338291] rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Bulk Upload
+            </button>
+          </div>
+        }
       />
     </div>
   )
