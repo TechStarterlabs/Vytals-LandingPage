@@ -122,7 +122,7 @@ export default function CustomerView() {
 
       {/* Customer Info */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 bg-gradient-to-r from-[#11b5b2] to-[#0fa09d] border-b">
+        <div className="px-6 py-4 bg-gradient-to-r from-[#338291] to-[#2a6d7a] border-b">
           <h2 className="text-lg font-semibold text-white">Customer Information</h2>
         </div>
         
@@ -170,7 +170,7 @@ export default function CustomerView() {
 
       {/* Activity History */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 bg-gradient-to-r from-[#11b5b2] to-[#0fa09d] border-b">
+        <div className="px-6 py-4 bg-gradient-to-r from-[#338291] to-[#2a6d7a] border-b">
           <h2 className="text-lg font-semibold text-white">Activity History</h2>
         </div>
         

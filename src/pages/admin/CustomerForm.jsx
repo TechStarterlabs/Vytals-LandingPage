@@ -139,7 +139,7 @@ export default function CustomerForm() {
       {/* Form */}
       <form onSubmit={handleSubmit}>
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 bg-gradient-to-r from-[#11b5b2] to-[#0fa09d] border-b">
+          <div className="px-6 py-4 bg-gradient-to-r from-[#338291] to-[#2a6d7a] border-b">
             <h2 className="text-lg font-semibold text-white">Customer Information</h2>
           </div>
           
@@ -201,7 +201,7 @@ export default function CustomerForm() {
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#11b5b2] focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#338291] focus:border-transparent"
                 >
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
@@ -221,7 +221,7 @@ export default function CustomerForm() {
             </Button>
             <Button
               type="submit"
-              className="bg-[#11b5b2] hover:bg-[#0fa09d] text-white"
+              className="bg-[#338291] hover:bg-[#2a6d7a] text-white"
             >
               <Save className="h-4 w-4 mr-2" />
               {isEdit ? "Update Customer" : "Create Customer"}

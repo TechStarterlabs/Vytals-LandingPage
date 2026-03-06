@@ -64,7 +64,7 @@ export default function DataTable({
         {showAddButton && (
           <Button 
             onClick={onAdd} 
-            className="bg-[#11b5b2] hover:bg-[#0fa09d] text-white shadow-md hover:shadow-lg transition-all px-6 py-2.5 w-full sm:w-auto flex items-center justify-center gap-2"
+            className="bg-[#338291] hover:bg-[#2a6d7a] text-white shadow-md hover:shadow-lg transition-all px-6 py-2.5 w-full sm:w-auto flex items-center justify-center gap-2"
           >
             <Plus className="h-4 w-4" />
             {addButtonText}
@@ -83,7 +83,7 @@ export default function DataTable({
               setSearchTerm(e.target.value)
               setCurrentPage(1)
             }}
-            className="w-full border-gray-300 focus:border-[#11b5b2] focus:ring-[#11b5b2]"
+            className="w-full border-gray-300 focus:border-[#338291] focus:ring-[#338291]"
           />
         </div>
         
@@ -104,7 +104,7 @@ export default function DataTable({
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px]">
-            <thead className="bg-gradient-to-r from-[#11b5b2] to-[#0fa09d] border-b border-[#0fa09d]">
+            <thead className="bg-gradient-to-r from-[#338291] to-[#2a6d7a] border-b border-[#2a6d7a]">
               <tr>
                 {columns.map((column, index) => (
                   <th
@@ -199,7 +199,7 @@ export default function DataTable({
                     onClick={() => setCurrentPage(pageNum)}
                     className={`px-3 py-1 text-sm rounded ${
                       currentPage === pageNum
-                        ? "bg-[#11b5b2] text-white"
+                        ? "bg-[#338291] text-white"
                         : "text-gray-700 hover:bg-gray-100 border border-gray-300"
                     }`}
                   >

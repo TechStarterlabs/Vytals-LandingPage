@@ -10,7 +10,9 @@ import {
   UserCog,
   Menu,
   User,
-  X
+  X,
+  ShoppingBag,
+  FileText
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { authService } from "@/lib/auth"
@@ -60,8 +62,10 @@ export default function AdminSidebar() {
 
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/admin/dashboard" },
+    { icon: ShoppingBag, label: "Products", path: "/admin/products" },
     { icon: Package, label: "Batches", path: "/admin/batches" },
     { icon: Barcode, label: "Serial Management", path: "/admin/serials" },
+    { icon: FileText, label: "COA", path: "/admin/coa" },
     { icon: ListChecks, label: "Scan Logs", path: "/admin/scan-logs" },
     { icon: Users, label: "Customers", path: "/admin/customers" },
     { icon: Gift, label: "Rewards", path: "/admin/rewards" },
@@ -122,7 +126,7 @@ export default function AdminSidebar() {
         {/* User Info */}
         <div className="p-3 border-b border-gray-200 flex-shrink-0">
           <div className={`flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-50 ${isCollapsed ? 'justify-center' : ''}`}>
-            <div className="h-8 w-8 rounded-full bg-[#11b5b2] flex items-center justify-center flex-shrink-0">
+            <div className="h-8 w-8 rounded-full bg-[#338291] flex items-center justify-center flex-shrink-0">
               <User className="h-4 w-4 text-white" />
             </div>
             <div className={`transition-all duration-300 overflow-hidden ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
@@ -144,7 +148,7 @@ export default function AdminSidebar() {
                 onClick={() => navigate(item.path)}
                 className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group relative ${
                   active
-                    ? "bg-[#11b5b2] text-white shadow-md"
+                    ? "bg-[#338291] text-white shadow-md"
                     : "text-gray-700 hover:bg-gray-100"
                 }`}
                 title={isCollapsed ? item.label : ''}

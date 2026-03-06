@@ -16,13 +16,24 @@ const ProtectedRoute = lazy(() => import("@/components/ProtectedRoute"))
 const AdminLogin = lazy(() => import("@/pages/admin/Login"))
 const Dashboard = lazy(() => import("@/pages/admin/Dashboard"))
 const Batches = lazy(() => import("@/pages/admin/Batches"))
+const BatchView = lazy(() => import("@/pages/admin/BatchView"))
+const BatchForm = lazy(() => import("@/pages/admin/BatchForm"))
 const Serials = lazy(() => import("@/pages/admin/Serials"))
+const SerialView = lazy(() => import("@/pages/admin/SerialView"))
+const SerialForm = lazy(() => import("@/pages/admin/SerialForm"))
+const SerialBulkUpload = lazy(() => import("@/pages/admin/SerialBulkUpload"))
+const COA = lazy(() => import("@/pages/admin/COA"))
+const COAView = lazy(() => import("@/pages/admin/COAView"))
+const COAForm = lazy(() => import("@/pages/admin/COAForm"))
+const COABulkUpload = lazy(() => import("@/pages/admin/COABulkUpload"))
 const ScanLogs = lazy(() => import("@/pages/admin/ScanLogs"))
 const Customers = lazy(() => import("@/pages/admin/Customers"))
 const CustomerView = lazy(() => import("@/pages/admin/CustomerView"))
 const CustomerForm = lazy(() => import("@/pages/admin/CustomerForm"))
 const Rewards = lazy(() => import("@/pages/admin/Rewards"))
 const Products = lazy(() => import("@/pages/admin/Products"))
+const ProductView = lazy(() => import("@/pages/admin/ProductView"))
+const ProductForm = lazy(() => import("@/pages/admin/ProductForm"))
 const Users = lazy(() => import("@/pages/admin/Users"))
 
 function ScrollToTopAndHash() {
@@ -133,13 +144,19 @@ function App() {
             <Route index element={<Navigate replace to="/admin/dashboard" />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="batches" element={<Batches />} />
-            <Route path="batches/new" element={<div>Batch Form - Coming Soon</div>} />
-            <Route path="batches/:id" element={<div>Batch View - Coming Soon</div>} />
-            <Route path="batches/:id/edit" element={<div>Batch Form - Coming Soon</div>} />
+            <Route path="batches/new" element={<BatchForm />} />
+            <Route path="batches/:id" element={<BatchView />} />
+            <Route path="batches/:id/edit" element={<BatchForm />} />
             <Route path="serials" element={<Serials />} />
-            <Route path="serials/new" element={<div>Serial Form - Coming Soon</div>} />
-            <Route path="serials/:id" element={<div>Serial View - Coming Soon</div>} />
-            <Route path="serials/:id/edit" element={<div>Serial Form - Coming Soon</div>} />
+            <Route path="serials/new" element={<SerialForm />} />
+            <Route path="serials/bulk" element={<SerialBulkUpload />} />
+            <Route path="serials/:id" element={<SerialView />} />
+            <Route path="serials/:id/edit" element={<SerialForm />} />
+            <Route path="coa" element={<COA />} />
+            <Route path="coa/new" element={<COAForm />} />
+            <Route path="coa/bulk" element={<COABulkUpload />} />
+            <Route path="coa/:id" element={<COAView />} />
+            <Route path="coa/:id/edit" element={<COAForm />} />
             <Route path="scan-logs" element={<ScanLogs />} />
             <Route path="scan-logs/:id" element={<div>Scan Log View - Coming Soon</div>} />
             <Route path="customers" element={<Customers />} />
@@ -151,6 +168,9 @@ function App() {
             <Route path="rewards/:id" element={<div>Reward View - Coming Soon</div>} />
             <Route path="rewards/:id/edit" element={<div>Reward Form - Coming Soon</div>} />
             <Route path="products" element={<Products />} />
+            <Route path="products/new" element={<ProductForm />} />
+            <Route path="products/:id" element={<ProductView />} />
+            <Route path="products/:id/edit" element={<ProductForm />} />
             <Route path="users" element={<Users />} />
             <Route path="users/new" element={<div>User Form - Coming Soon</div>} />
             <Route path="users/:id" element={<div>User View - Coming Soon</div>} />
