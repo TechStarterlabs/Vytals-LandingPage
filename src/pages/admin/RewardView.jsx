@@ -1,32 +1,32 @@
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { ArrowLeft, Edit, Package } from "lucide-react"
+import { ArrowLeft, Edit, Gift } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { apiClient } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 
-export default function ProductView() {
+export default function RewardView() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { toast } = useToast()
-  const [product, setProduct] = useState(null)
+  const [reward, setReward] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchProduct()
+    fetchReward()
   }, [id])
 
-  const fetchProduct = async () => {
+  const fetchReward = async () => {
     try {
-      const response = await apiClient.get(`/admin/products/${id}`)
-      setProduct(response.data)
+      const response = await apiClient.get(`/admin/rewards/${id}`)
+      setReward(response.data)
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to load product details",
+        description: "Failed to load reward details",
         variant: "destructive"
       })
-      navigate('/admin/products')
+      navigate('/admin/rewards')
     } finally {
       setLoading(false)
     }
@@ -40,7 +40,7 @@ export default function ProductView() {
     )
   }
 
-  if (!product) {
+  if (!reward) {
     return null
   }
 
@@ -52,7 +52,7 @@ export default function ProductView() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate("/admin/products")}
+            onClick={() => navigate("/admin/rewards")}
             className="border-gray-300"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -60,28 +60,28 @@ export default function ProductView() {
           </Button>
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
-              Product Details
+              Reward Details
             </h1>
             <p className="text-sm text-gray-500 mt-1">
-              View product information
+              View reward information
             </p>
           </div>
         </div>
         <Button
-          onClick={() => navigate(`/admin/products/${id}/edit`)}
+          onClick={() => navigate(`/admin/rewards/${id}/edit`)}
           className="bg-[#11b5b2] hover:bg-[#0fa09d] text-white"
         >
           <Edit className="h-4 w-4 mr-2" />
-          Edit Product
+          Edit Reward
         </Button>
       </div>
 
-      {/* Product Information */}
+      {/* Reward Information */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="px-6 py-4 bg-gradient-to-r from-[#11b5b2] to-[#0fa09d] border-b">
           <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Product Information
+            <Gift className="h-5 w-5" />
+            Reward Information
           </h2>
         </div>
         
@@ -89,46 +89,57 @@ export default function ProductView() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-500 mb-1">
-                Product Code
+                Reward Name
               </label>
               <p className="text-base font-semibold text-gray-900">
-                {product.product_code}
+                {reward.reward_name || '-'}
               </p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-500 mb-1">
-                Product Name
-              </label>
-              <p className="text-base font-semibold text-gray-900">
-                {product.name}
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">
-                Pack Type
+                Reward Type
               </label>
               <p className="text-base text-gray-900">
-                {product.pack_type}
+                {reward.reward_type || '-'}
               </p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-500 mb-1">
-                Pack Size
+                Value
               </label>
               <p className="text-base text-gray-900">
-                {product.pack_size}
+                {reward.value || '-'}
               </p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-500 mb-1">
-                Total Batches
+                Status
+              </label>
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                reward.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+              }`}>
+                {reward.status || 'Unknown'}
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-500 mb-1">
+                Total Issued
               </label>
               <p className="text-base text-gray-900">
-                {product.batch_count || 0}
+                {reward.total_issued || 0}
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-500 mb-1">
+                Total Redeemed
+              </label>
+              <p className="text-base text-gray-900">
+                {reward.total_redeemed || 0}
               </p>
             </div>
 
@@ -137,7 +148,7 @@ export default function ProductView() {
                 Created At
               </label>
               <p className="text-base text-gray-900">
-                {product.created_at ? new Date(product.created_at).toLocaleString() : '-'}
+                {reward.created_at ? new Date(reward.created_at).toLocaleString() : '-'}
               </p>
             </div>
           </div>

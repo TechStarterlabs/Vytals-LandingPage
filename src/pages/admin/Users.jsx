@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { apiClient } from "@/lib/api"
 import DataTable from "@/components/DataTable"
 import { useNavigate } from "react-router-dom"
+import { useConfirm } from "@/hooks/use-confirm"
+import ConfirmDialog from "@/components/ConfirmDialog"
 
 export default function Users() {
   const [users, setUsers] = useState([])
@@ -12,6 +14,7 @@ export default function Users() {
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
   const navigate = useNavigate()
+  const { confirm, isOpen, config, handleConfirm, handleCancel } = useConfirm()
 
   useEffect(() => {
     fetchUsers()
@@ -37,7 +40,14 @@ export default function Users() {
   }
 
   const handleDelete = async (userId) => {
-    if (!confirm('Are you sure you want to delete this user?')) return
+    const confirmed = await confirm({
+      title: "Delete User",
+      message: "Are you sure you want to delete this user?",
+      confirmText: "Delete",
+      cancelText: "Cancel"
+    })
+
+    if (!confirmed) return
 
     try {
       await apiClient.delete(`/admin/users/${userId}`)
@@ -139,6 +149,12 @@ export default function Users() {
 
   return (
     <div>
+      <ConfirmDialog
+        isOpen={isOpen}
+        onClose={handleCancel}
+        onConfirm={handleConfirm}
+        {...config}
+      />
       <DataTable
         title="Admin Users"
         subtitle="Manage all admin users in the system"

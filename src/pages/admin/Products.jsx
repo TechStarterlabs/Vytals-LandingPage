@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react"
 import { Eye, Edit, Trash2 } from "lucide-react"
 import DataTable from "@/components/DataTable"
+import ConfirmDialog from "@/components/ConfirmDialog"
 import { apiClient } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 import { useNavigate } from "react-router-dom"
+import { useConfirm } from "@/hooks/use-confirm"
 
 export default function Products() {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
   const navigate = useNavigate()
+  const { confirm, isOpen, config, handleConfirm, handleCancel } = useConfirm()
 
   useEffect(() => {
     fetchProducts()
@@ -40,7 +43,14 @@ export default function Products() {
   }
 
   const handleDelete = async (productId) => {
-    if (!confirm("Are you sure you want to delete this product? This action cannot be undone.")) return
+    const confirmed = await confirm({
+      title: "Delete Product",
+      message: "Are you sure you want to delete this product? This action cannot be undone.",
+      confirmText: "Delete",
+      cancelText: "Cancel"
+    })
+    
+    if (!confirmed) return
     
     try {
       await apiClient.delete(`/admin/products/${productId}`)
@@ -136,6 +146,12 @@ export default function Products() {
 
   return (
     <div>
+      <ConfirmDialog
+        isOpen={isOpen}
+        onClose={handleCancel}
+        onConfirm={handleConfirm}
+        {...config}
+      />
       <DataTable
         title="Products"
         subtitle="Manage all products in the system"
