@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
+import { useForm } from "react-hook-form"
 import { ArrowLeft, Save } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,16 +12,21 @@ export default function COAForm() {
   const navigate = useNavigate()
   const { toast } = useToast()
   const isEdit = id && id !== 'new'
-  
-  const [loading, setLoading] = useState(true)
-  const [submitting, setSubmitting] = useState(false)
   const [batches, setBatches] = useState([])
-  const [formData, setFormData] = useState({
-    batch_id: "",
-    file_url: "",
-    issue_date: ""
+  const [loading, setLoading] = useState(true)
+  
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset
+  } = useForm({
+    defaultValues: {
+      batch_id: "",
+      file_url: "",
+      issue_date: ""
+    }
   })
-  const [errors, setErrors] = useState({})
 
   useEffect(() => {
     const initializeForm = async () => {
@@ -56,7 +62,7 @@ export default function COAForm() {
       
       const batchId = coaData.batch?.batch_id || coaData.batch_id || ""
       
-      setFormData({
+      reset({
         batch_id: batchId ? String(batchId) : "",
         file_url: coaData.file_url || "",
         issue_date: coaData.issue_date ? coaData.issue_date.split('T')[0] : ""
@@ -73,45 +79,11 @@ export default function COAForm() {
     }
   }
 
-  const validateForm = () => {
-    const newErrors = {}
-    
-    if (!formData.batch_id) {
-      newErrors.batch_id = "Batch is required"
-    }
-    
-    if (!formData.file_url.trim()) {
-      newErrors.file_url = "File URL is required"
-    } else if (!formData.file_url.match(/^https?:\/\/.+/)) {
-      newErrors.file_url = "Please enter a valid URL"
-    }
-    
-    if (!formData.issue_date) {
-      newErrors.issue_date = "Issue date is required"
-    }
-    
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    
-    if (!validateForm()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fix the errors in the form",
-        variant: "destructive"
-      })
-      return
-    }
-
-    setSubmitting(true)
-
+  const onSubmit = async (data) => {
     try {
       const payload = {
-        ...formData,
-        batch_id: parseInt(formData.batch_id, 10)
+        ...data,
+        batch_id: parseInt(data.batch_id, 10)
       }
 
       if (isEdit) {
@@ -136,15 +108,6 @@ export default function COAForm() {
         description: error.message || `Failed to ${isEdit ? 'update' : 'create'} COA`,
         variant: "destructive"
       })
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }))
     }
   }
 
@@ -170,7 +133,7 @@ export default function COAForm() {
           Back
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
             {isEdit ? "Edit COA" : "Add New COA"}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -180,9 +143,9 @@ export default function COAForm() {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 bg-gradient-to-r from-[#338291] to-[#2a6d7a] border-b">
+          <div className="px-6 py-4 bg-gradient-to-r from-[#11b5b2] to-[#0fa09d] border-b">
             <h2 className="text-lg font-semibold text-white">COA Information</h2>
           </div>
           
@@ -194,9 +157,8 @@ export default function COAForm() {
                   Batch <span className="text-red-500">*</span>
                 </label>
                 <select
-                  value={formData.batch_id}
-                  onChange={(e) => handleChange('batch_id', e.target.value)}
-                  className={`w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#338291] focus:border-transparent ${
+                  {...register("batch_id", { required: "Batch is required" })}
+                  className={`w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#11b5b2] focus:border-transparent ${
                     errors.batch_id ? 'border-red-500' : 'border-gray-300'
                   }`}
                 >
@@ -210,7 +172,7 @@ export default function COAForm() {
                   ))}
                 </select>
                 {errors.batch_id && (
-                  <p className="mt-1 text-sm text-red-600">{errors.batch_id}</p>
+                  <p className="mt-1 text-sm text-red-600">{errors.batch_id.message}</p>
                 )}
                 <p className="mt-1 text-xs text-gray-500">
                   Select the batch this COA belongs to
@@ -223,13 +185,12 @@ export default function COAForm() {
                   Issue Date <span className="text-red-500">*</span>
                 </label>
                 <Input
+                  {...register("issue_date", { required: "Issue date is required" })}
                   type="date"
-                  value={formData.issue_date}
-                  onChange={(e) => handleChange('issue_date', e.target.value)}
                   className={errors.issue_date ? 'border-red-500' : 'border-gray-300'}
                 />
                 {errors.issue_date && (
-                  <p className="mt-1 text-sm text-red-600">{errors.issue_date}</p>
+                  <p className="mt-1 text-sm text-red-600">{errors.issue_date.message}</p>
                 )}
                 <p className="mt-1 text-xs text-gray-500">
                   Date when the COA was issued
@@ -239,20 +200,24 @@ export default function COAForm() {
               {/* File URL */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  File URL <span className="text-red-500">*</span>
+                  File URL
                 </label>
                 <Input
+                  {...register("file_url", {
+                    pattern: {
+                      value: /^https?:\/\/.+/,
+                      message: "Please enter a valid URL"
+                    }
+                  })}
                   type="url"
-                  value={formData.file_url}
-                  onChange={(e) => handleChange('file_url', e.target.value)}
                   className={errors.file_url ? 'border-red-500' : 'border-gray-300'}
                   placeholder="https://cdn.example.com/coa/batch-00001.pdf"
                 />
                 {errors.file_url && (
-                  <p className="mt-1 text-sm text-red-600">{errors.file_url}</p>
+                  <p className="mt-1 text-sm text-red-600">{errors.file_url.message}</p>
                 )}
                 <p className="mt-1 text-xs text-gray-500">
-                  Full URL to the COA PDF file (must be publicly accessible)
+                  Optional: Enter the URL where the COA file is hosted
                 </p>
               </div>
             </div>
@@ -282,23 +247,23 @@ export default function COAForm() {
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-3">
             <Button
               type="button"
               variant="outline"
               onClick={() => navigate("/admin/coa")}
-              className="border-gray-300"
-              disabled={submitting}
+              className="border-gray-300 w-full sm:w-auto"
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="bg-[#338291] hover:bg-[#2a6d7a] text-white"
-              disabled={submitting}
+              className="bg-[#11b5b2] hover:bg-[#0fa09d] text-white w-full sm:w-auto"
+              disabled={isSubmitting}
             >
               <Save className="h-4 w-4 mr-2" />
-              {submitting ? 'Saving...' : (isEdit ? "Update COA" : "Create COA")}
+              {isSubmitting ? 'Saving...' : (isEdit ? "Update COA" : "Create COA")}
             </Button>
           </div>
         </div>

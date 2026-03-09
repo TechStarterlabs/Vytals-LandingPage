@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react"
 import { Eye, Edit, Trash2 } from "lucide-react"
 import DataTable from "@/components/DataTable"
+import ConfirmDialog from "@/components/ConfirmDialog"
 import { apiClient } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 import { useNavigate } from "react-router-dom"
+import { useConfirm } from "@/hooks/use-confirm"
 
 export default function Customers() {
   const [customers, setCustomers] = useState([])
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
   const navigate = useNavigate()
+  const { confirm, isOpen, config, handleConfirm, handleCancel } = useConfirm()
 
   useEffect(() => {
     fetchCustomers()
@@ -69,7 +72,14 @@ export default function Customers() {
   }
 
   const handleDelete = async (customerId) => {
-    if (!confirm("Are you sure you want to delete this customer?")) return
+    const confirmed = await confirm({
+      title: "Delete Customer",
+      message: "Are you sure you want to delete this customer?",
+      confirmText: "Delete",
+      cancelText: "Cancel"
+    })
+    
+    if (!confirmed) return
     
     try {
       // await apiClient.delete(`/admin/customers/${customerId}`)
@@ -157,6 +167,12 @@ export default function Customers() {
 
   return (
     <div>
+      <ConfirmDialog
+        isOpen={isOpen}
+        onClose={handleCancel}
+        onConfirm={handleConfirm}
+        {...config}
+      />
       <DataTable
         title="Customers"
         subtitle="Manage all customers in the system"

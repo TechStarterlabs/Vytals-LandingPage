@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react"
 import { Eye, Edit, Trash2, Upload } from "lucide-react"
 import DataTable from "@/components/DataTable"
+import ConfirmDialog from "@/components/ConfirmDialog"
 import { apiClient } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 import { useNavigate } from "react-router-dom"
+import { useConfirm } from "@/hooks/use-confirm"
 
 export default function COA() {
   const [coas, setCoas] = useState([])
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
   const navigate = useNavigate()
+  const { confirm, isOpen, config, handleConfirm, handleCancel } = useConfirm()
 
   useEffect(() => {
     fetchCOAs()
@@ -40,7 +43,14 @@ export default function COA() {
   }
 
   const handleDelete = async (coaId) => {
-    if (!confirm("Are you sure you want to delete this COA? This action cannot be undone.")) return
+    const confirmed = await confirm({
+      title: "Delete COA",
+      message: "Are you sure you want to delete this COA? This action cannot be undone.",
+      confirmText: "Delete",
+      cancelText: "Cancel"
+    })
+    
+    if (!confirmed) return
     
     try {
       await apiClient.delete(`/admin/coa/${coaId}`)
@@ -150,6 +160,12 @@ export default function COA() {
 
   return (
     <div>
+      <ConfirmDialog
+        isOpen={isOpen}
+        onClose={handleCancel}
+        onConfirm={handleConfirm}
+        {...config}
+      />
       <DataTable
         title="Certificates of Analysis (COA)"
         subtitle="Manage COA documents for batches"
@@ -161,14 +177,14 @@ export default function COA() {
           <div className="flex gap-3">
             <button
               onClick={() => navigate('/admin/coa/new')}
-              className="px-4 py-2 bg-[#338291] hover:bg-[#2a6d7a] text-white rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+              className="px-4 py-2 bg-[#11b5b2] hover:bg-[#0fa09d] text-white rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2"
             >
               <span className="text-lg">+</span>
               Add Single COA
             </button>
             <button
               onClick={() => navigate('/admin/coa/bulk')}
-              className="px-4 py-2 bg-white hover:bg-gray-50 text-[#338291] border-2 border-[#338291] rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+              className="px-4 py-2 bg-white hover:bg-gray-50 text-[#11b5b2] border-2 border-[#11b5b2] rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2"
             >
               <Upload className="h-4 w-4" />
               Bulk Upload

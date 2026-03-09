@@ -31,6 +31,8 @@ const Customers = lazy(() => import("@/pages/admin/Customers"))
 const CustomerView = lazy(() => import("@/pages/admin/CustomerView"))
 const CustomerForm = lazy(() => import("@/pages/admin/CustomerForm"))
 const Rewards = lazy(() => import("@/pages/admin/Rewards"))
+const RewardForm = lazy(() => import("@/pages/admin/RewardForm"))
+const RewardView = lazy(() => import("@/pages/admin/RewardView"))
 const Products = lazy(() => import("@/pages/admin/Products"))
 const ProductView = lazy(() => import("@/pages/admin/ProductView"))
 const ProductForm = lazy(() => import("@/pages/admin/ProductForm"))
@@ -164,9 +166,9 @@ function App() {
             <Route path="customers/:id" element={<CustomerView />} />
             <Route path="customers/:id/edit" element={<CustomerForm />} />
             <Route path="rewards" element={<Rewards />} />
-            <Route path="rewards/new" element={<div>Reward Form - Coming Soon</div>} />
-            <Route path="rewards/:id" element={<div>Reward View - Coming Soon</div>} />
-            <Route path="rewards/:id/edit" element={<div>Reward Form - Coming Soon</div>} />
+            <Route path="rewards/new" element={<RewardForm />} />
+            <Route path="rewards/:id" element={<RewardView />} />
+            <Route path="rewards/:id/edit" element={<RewardForm />} />
             <Route path="products" element={<Products />} />
             <Route path="products/new" element={<ProductForm />} />
             <Route path="products/:id" element={<ProductView />} />

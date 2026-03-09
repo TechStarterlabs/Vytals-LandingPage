@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { apiClient } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 
-export default function CustomerForm() {
+export default function RewardForm() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { toast } = useToast()
@@ -17,40 +17,41 @@ export default function CustomerForm() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-    reset,
-    setValue
+    reset
   } = useForm({
     defaultValues: {
-      name: "",
-      mobile: "",
-      email: "",
+      reward_name: "",
+      reward_type: "Discount Code",
+      value: "",
+      description: "",
       status: "Active"
     }
   })
 
   useEffect(() => {
     if (isEdit) {
-      fetchCustomer()
+      fetchReward()
     }
   }, [id])
 
-  const fetchCustomer = async () => {
+  const fetchReward = async () => {
     try {
       // TODO: Replace with actual API call
-      // const data = await apiClient.get(`/admin/customers/${id}`)
+      // const data = await apiClient.get(`/admin/rewards/${id}`)
       // reset(data.data)
       
       // Mock data
       reset({
-        name: "Akash Shetty",
-        mobile: "9987900884",
-        email: "shettykash20@gmail.com",
+        reward_name: "10% Discount",
+        reward_type: "Discount Code",
+        value: "10",
+        description: "Get 10% off on your next purchase",
         status: "Active"
       })
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to load customer details",
+        description: "Failed to load reward details",
         variant: "destructive"
       })
     }
@@ -59,25 +60,25 @@ export default function CustomerForm() {
   const onSubmit = async (data) => {
     try {
       if (isEdit) {
-        // await apiClient.put(`/admin/customers/${id}`, data)
+        // await apiClient.put(`/admin/rewards/${id}`, data)
         toast({
           title: "Success",
-          description: "Customer updated successfully",
+          description: "Reward updated successfully",
           variant: "success"
         })
       } else {
-        // await apiClient.post('/admin/customers', data)
+        // await apiClient.post('/admin/rewards', data)
         toast({
           title: "Success",
-          description: "Customer created successfully",
+          description: "Reward created successfully",
           variant: "success"
         })
       }
-      navigate("/admin/customers")
+      navigate("/admin/rewards")
     } catch (error) {
       toast({
         title: "Error",
-        description: error.message || "Failed to save customer",
+        description: error.message || "Failed to save reward",
         variant: "destructive"
       })
     }
@@ -90,7 +91,7 @@ export default function CustomerForm() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => navigate("/admin/customers")}
+          onClick={() => navigate("/admin/rewards")}
           className="border-gray-300"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -98,10 +99,10 @@ export default function CustomerForm() {
         </Button>
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
-            {isEdit ? "Edit Customer" : "Add New Customer"}
+            {isEdit ? "Edit Reward" : "Add New Reward"}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            {isEdit ? "Update customer information" : "Create a new customer"}
+            {isEdit ? "Update reward information" : "Create a new reward"}
           </p>
         </div>
       </div>
@@ -110,72 +111,75 @@ export default function CustomerForm() {
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="px-6 py-4 bg-gradient-to-r from-[#11b5b2] to-[#0fa09d] border-b">
-            <h2 className="text-lg font-semibold text-white">Customer Information</h2>
+            <h2 className="text-lg font-semibold text-white">Reward Information</h2>
           </div>
           
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Name */}
+              {/* Reward Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Name <span className="text-red-500">*</span>
+                  Reward Name <span className="text-red-500">*</span>
                 </label>
                 <Input
-                  {...register("name", {
-                    required: "Name is required",
+                  {...register("reward_name", {
+                    required: "Reward name is required",
                     minLength: {
-                      value: 2,
-                      message: "Name must be at least 2 characters"
+                      value: 3,
+                      message: "Reward name must be at least 3 characters"
                     }
                   })}
-                  className={errors.name ? 'border-red-500' : 'border-gray-300'}
-                  placeholder="Enter customer name"
+                  className={errors.reward_name ? 'border-red-500' : 'border-gray-300'}
+                  placeholder="Enter reward name"
                 />
-                {errors.name && (
-                  <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+                {errors.reward_name && (
+                  <p className="mt-1 text-sm text-red-600">{errors.reward_name.message}</p>
                 )}
               </div>
 
-              {/* Mobile */}
+              {/* Reward Type */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mobile <span className="text-red-500">*</span>
+                  Reward Type <span className="text-red-500">*</span>
                 </label>
-                <Input
-                  {...register("mobile", {
-                    required: "Mobile is required",
-                    pattern: {
-                      value: /^[0-9]{10}$/,
-                      message: "Mobile must be 10 digits"
-                    }
-                  })}
-                  className={errors.mobile ? 'border-red-500' : 'border-gray-300'}
-                  placeholder="Enter mobile number"
-                  disabled={isEdit}
-                />
-                {errors.mobile && (
-                  <p className="mt-1 text-sm text-red-600">{errors.mobile.message}</p>
+                <select
+                  {...register("reward_type", { required: "Reward type is required" })}
+                  className={`w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#11b5b2] focus:border-transparent ${
+                    errors.reward_type ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                >
+                  <option value="Discount Code">Discount Code</option>
+                  <option value="Free Product">Free Product</option>
+                  <option value="Cashback">Cashback</option>
+                </select>
+                {errors.reward_type && (
+                  <p className="mt-1 text-sm text-red-600">{errors.reward_type.message}</p>
                 )}
               </div>
 
-              {/* Email */}
+              {/* Value */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
+                  Value (%) <span className="text-red-500">*</span>
                 </label>
                 <Input
-                  {...register("email", {
-                    pattern: {
-                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                      message: "Invalid email address"
+                  {...register("value", {
+                    required: "Value is required",
+                    min: {
+                      value: 1,
+                      message: "Value must be at least 1"
+                    },
+                    max: {
+                      value: 100,
+                      message: "Value cannot exceed 100"
                     }
                   })}
-                  className={errors.email ? 'border-red-500' : 'border-gray-300'}
-                  placeholder="Enter email address"
-                  type="email"
+                  type="number"
+                  className={errors.value ? 'border-red-500' : 'border-gray-300'}
+                  placeholder="Enter value"
                 />
-                {errors.email && (
-                  <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+                {errors.value && (
+                  <p className="mt-1 text-sm text-red-600">{errors.value.message}</p>
                 )}
               </div>
 
@@ -191,9 +195,19 @@ export default function CustomerForm() {
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
                 </select>
-                {errors.status && (
-                  <p className="mt-1 text-sm text-red-600">{errors.status.message}</p>
-                )}
+              </div>
+
+              {/* Description */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description
+                </label>
+                <textarea
+                  {...register("description")}
+                  rows={3}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#11b5b2] focus:border-transparent"
+                  placeholder="Enter reward description"
+                />
               </div>
             </div>
           </div>
@@ -203,7 +217,7 @@ export default function CustomerForm() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate("/admin/customers")}
+              onClick={() => navigate("/admin/rewards")}
               className="border-gray-300 w-full sm:w-auto"
               disabled={isSubmitting}
             >
@@ -215,7 +229,7 @@ export default function CustomerForm() {
               disabled={isSubmitting}
             >
               <Save className="h-4 w-4 mr-2" />
-              {isSubmitting ? "Saving..." : isEdit ? "Update Customer" : "Create Customer"}
+              {isSubmitting ? "Saving..." : isEdit ? "Update Reward" : "Create Reward"}
             </Button>
           </div>
         </div>

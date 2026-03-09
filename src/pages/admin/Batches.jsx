@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react"
 import { Eye, Edit, Trash2 } from "lucide-react"
 import DataTable from "@/components/DataTable"
+import ConfirmDialog from "@/components/ConfirmDialog"
 import { apiClient } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 import { useNavigate, useLocation } from "react-router-dom"
+import { useConfirm } from "@/hooks/use-confirm"
 
 export default function Batches() {
   const [batches, setBatches] = useState([])
@@ -11,6 +13,7 @@ export default function Batches() {
   const { toast } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
+  const { confirm, isOpen, config, handleConfirm, handleCancel } = useConfirm()
 
   useEffect(() => {
     fetchBatches()
@@ -47,7 +50,14 @@ export default function Batches() {
   }
 
   const handleDelete = async (batchId) => {
-    if (!confirm("Are you sure you want to delete this batch? This action cannot be undone.")) return
+    const confirmed = await confirm({
+      title: "Delete Batch",
+      message: "Are you sure you want to delete this batch? This action cannot be undone.",
+      confirmText: "Delete",
+      cancelText: "Cancel"
+    })
+    
+    if (!confirmed) return
     
     try {
       await apiClient.delete(`/admin/batches/${batchId}`)
@@ -114,9 +124,6 @@ export default function Batches() {
       cell: (row) => (
         <div className="text-center">
           <p className="font-medium text-gray-900">{row.serial_count || 0}</p>
-          {row.verified_count > 0 && (
-            <p className="text-xs text-green-600">{row.verified_count} verified</p>
-          )}
         </div>
       )
     },
@@ -124,9 +131,9 @@ export default function Batches() {
       header: "COA",
       cell: (row) => (
         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          row.has_coa ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+          row.has_coa ? "bg-green-100 text-green-800" : "bg-red-100 text-gray-800"
         }`}>
-          {row.has_coa ? "✓ Yes" : "✗ No"}
+          {row.has_coa ? "Yes" : " No"}
         </span>
       )
     },
@@ -191,6 +198,12 @@ export default function Batches() {
 
   return (
     <div>
+      <ConfirmDialog
+        isOpen={isOpen}
+        onClose={handleCancel}
+        onConfirm={handleConfirm}
+        {...config}
+      />
       <DataTable
         title="Batches"
         subtitle="Manage all product batches in the system"

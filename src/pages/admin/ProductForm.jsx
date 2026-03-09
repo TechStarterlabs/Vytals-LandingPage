@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
+import { useForm } from "react-hook-form"
 import { ArrowLeft, Save } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,16 +12,22 @@ export default function ProductForm() {
   const navigate = useNavigate()
   const { toast } = useToast()
   const isEdit = id && id !== 'new'
-  
   const [loading, setLoading] = useState(isEdit)
-  const [submitting, setSubmitting] = useState(false)
-  const [formData, setFormData] = useState({
-    product_code: "",
-    name: "",
-    pack_type: "",
-    pack_size: ""
+  
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+    setValue
+  } = useForm({
+    defaultValues: {
+      product_code: "",
+      name: "",
+      pack_type: "",
+      pack_size: ""
+    }
   })
-  const [errors, setErrors] = useState({})
 
   useEffect(() => {
     if (isEdit) {
@@ -31,7 +38,7 @@ export default function ProductForm() {
   const fetchProduct = async () => {
     try {
       const response = await apiClient.get(`/admin/products/${id}`)
-      setFormData({
+      reset({
         product_code: response.data.product_code || "",
         name: response.data.name || "",
         pack_type: response.data.pack_type || "",
@@ -49,57 +56,17 @@ export default function ProductForm() {
     }
   }
 
-  const validateForm = () => {
-    const newErrors = {}
-    
-    if (!formData.product_code.trim()) {
-      newErrors.product_code = "Product code is required"
-    } else if (!/^[A-Z0-9]+$/.test(formData.product_code)) {
-      newErrors.product_code = "Product code must be uppercase alphanumeric (e.g., VSR001)"
-    }
-    
-    if (!formData.name.trim()) {
-      newErrors.name = "Product name is required"
-    } else if (formData.name.length < 3) {
-      newErrors.name = "Product name must be at least 3 characters"
-    }
-    
-    if (!formData.pack_type.trim()) {
-      newErrors.pack_type = "Pack type is required"
-    }
-    
-    if (!formData.pack_size.trim()) {
-      newErrors.pack_size = "Pack size is required"
-    }
-    
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    
-    if (!validateForm()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fix the errors in the form",
-        variant: "destructive"
-      })
-      return
-    }
-
-    setSubmitting(true)
-
+  const onSubmit = async (data) => {
     try {
       if (isEdit) {
-        await apiClient.put(`/admin/products/${id}`, formData)
+        await apiClient.put(`/admin/products/${id}`, data)
         toast({
           title: "Success",
           description: "Product updated successfully",
           variant: "success"
         })
       } else {
-        await apiClient.post('/admin/products', formData)
+        await apiClient.post('/admin/products', data)
         toast({
           title: "Success",
           description: "Product created successfully",
@@ -113,16 +80,6 @@ export default function ProductForm() {
         description: error.message || `Failed to ${isEdit ? 'update' : 'create'} product`,
         variant: "destructive"
       })
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-    // Clear error for this field when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }))
     }
   }
 
@@ -158,9 +115,9 @@ export default function ProductForm() {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 bg-gradient-to-r from-[#338291] to-[#2a6d7a] border-b">
+          <div className="px-6 py-4 bg-gradient-to-r from-[#11b5b2] to-[#0fa09d] border-b">
             <h2 className="text-lg font-semibold text-white">Product Information</h2>
           </div>
           
@@ -172,15 +129,23 @@ export default function ProductForm() {
                   Product Code <span className="text-red-500">*</span>
                 </label>
                 <Input
+                  {...register("product_code", {
+                    required: "Product code is required",
+                    pattern: {
+                      value: /^[A-Z0-9]+$/,
+                      message: "Product code must be uppercase alphanumeric (e.g., VSR001)"
+                    }
+                  })}
                   type="text"
-                  value={formData.product_code}
-                  onChange={(e) => handleChange('product_code', e.target.value.toUpperCase())}
-                  className={`${errors.product_code ? 'border-red-500' : 'border-gray-300'}`}
+                  className={errors.product_code ? 'border-red-500' : 'border-gray-300'}
                   placeholder="VSR001"
                   disabled={isEdit}
+                  onChange={(e) => {
+                    e.target.value = e.target.value.toUpperCase()
+                  }}
                 />
                 {errors.product_code && (
-                  <p className="mt-1 text-sm text-red-600">{errors.product_code}</p>
+                  <p className="mt-1 text-sm text-red-600">{errors.product_code.message}</p>
                 )}
                 <p className="mt-1 text-xs text-gray-500">
                   Unique identifier (e.g., VSR001, OM001). Cannot be changed after creation.
@@ -193,14 +158,19 @@ export default function ProductForm() {
                   Product Name <span className="text-red-500">*</span>
                 </label>
                 <Input
+                  {...register("name", {
+                    required: "Product name is required",
+                    minLength: {
+                      value: 3,
+                      message: "Product name must be at least 3 characters"
+                    }
+                  })}
                   type="text"
-                  value={formData.name}
-                  onChange={(e) => handleChange('name', e.target.value)}
-                  className={`${errors.name ? 'border-red-500' : 'border-gray-300'}`}
+                  className={errors.name ? 'border-red-500' : 'border-gray-300'}
                   placeholder="Premium Omega-3 Fish Oil"
                 />
                 {errors.name && (
-                  <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                  <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
                 )}
               </div>
 
@@ -210,9 +180,8 @@ export default function ProductForm() {
                   Pack Type <span className="text-red-500">*</span>
                 </label>
                 <select
-                  value={formData.pack_type}
-                  onChange={(e) => handleChange('pack_type', e.target.value)}
-                  className={`w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#338291] focus:border-transparent ${
+                  {...register("pack_type", { required: "Pack type is required" })}
+                  className={`w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#11b5b2] focus:border-transparent ${
                     errors.pack_type ? 'border-red-500' : 'border-gray-300'
                   }`}
                 >
@@ -225,7 +194,7 @@ export default function ProductForm() {
                   <option value="Tube">Tube</option>
                 </select>
                 {errors.pack_type && (
-                  <p className="mt-1 text-sm text-red-600">{errors.pack_type}</p>
+                  <p className="mt-1 text-sm text-red-600">{errors.pack_type.message}</p>
                 )}
               </div>
 
@@ -235,14 +204,13 @@ export default function ProductForm() {
                   Pack Size <span className="text-red-500">*</span>
                 </label>
                 <Input
+                  {...register("pack_size", { required: "Pack size is required" })}
                   type="text"
-                  value={formData.pack_size}
-                  onChange={(e) => handleChange('pack_size', e.target.value)}
-                  className={`${errors.pack_size ? 'border-red-500' : 'border-gray-300'}`}
+                  className={errors.pack_size ? 'border-red-500' : 'border-gray-300'}
                   placeholder="60 capsules"
                 />
                 {errors.pack_size && (
-                  <p className="mt-1 text-sm text-red-600">{errors.pack_size}</p>
+                  <p className="mt-1 text-sm text-red-600">{errors.pack_size.message}</p>
                 )}
                 <p className="mt-1 text-xs text-gray-500">
                   e.g., "60 capsules", "90 tablets", "500ml"
@@ -273,23 +241,23 @@ export default function ProductForm() {
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-3">
             <Button
               type="button"
               variant="outline"
               onClick={() => navigate("/admin/products")}
-              className="border-gray-300"
-              disabled={submitting}
+              className="border-gray-300 w-full sm:w-auto"
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="bg-[#338291] hover:bg-[#2a6d7a] text-white"
-              disabled={submitting}
+              className="bg-[#11b5b2] hover:bg-[#0fa09d] text-white w-full sm:w-auto"
+              disabled={isSubmitting}
             >
               <Save className="h-4 w-4 mr-2" />
-              {submitting ? 'Saving...' : (isEdit ? "Update Product" : "Create Product")}
+              {isSubmitting ? 'Saving...' : (isEdit ? "Update Product" : "Create Product")}
             </Button>
           </div>
         </div>
