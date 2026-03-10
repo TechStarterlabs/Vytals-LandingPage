@@ -63,7 +63,7 @@ export default function DataTable({
         </div>
         {customActions ? (
           customActions
-        ) : showAddButton ? (
+        ) : showAddButton && onAdd ? (
           <button
             onClick={onAdd}
             className="px-4 py-2 bg-[#338291] hover:bg-[#2a6d7a] text-white rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2"

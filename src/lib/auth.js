@@ -1,5 +1,6 @@
 const TOKEN_KEY = 'admin_token'
 const USER_KEY = 'admin_user'
+const PERMISSIONS_KEY = 'admin_permissions'
 
 export const authService = {
   setToken: (token) => {
@@ -13,6 +14,7 @@ export const authService = {
   removeToken: () => {
     localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(USER_KEY)
+    localStorage.removeItem(PERMISSIONS_KEY)
   },
 
   isAuthenticated: () => {
@@ -26,5 +28,26 @@ export const authService = {
   getUser: () => {
     const user = localStorage.getItem(USER_KEY)
     return user ? JSON.parse(user) : null
+  },
+
+  setPermissions: (permissions) => {
+    localStorage.setItem(PERMISSIONS_KEY, JSON.stringify(permissions))
+    // Dispatch custom event to notify components
+    window.dispatchEvent(new Event('permissionsUpdated'))
+  },
+
+  getPermissions: () => {
+    const permissions = localStorage.getItem(PERMISSIONS_KEY)
+    return permissions ? JSON.parse(permissions) : []
+  },
+
+  hasPermission: (permission) => {
+    const permissions = authService.getPermissions()
+    return permissions.includes(permission)
+  },
+
+  hasAnyPermission: (permissionList) => {
+    const permissions = authService.getPermissions()
+    return permissionList.some(p => permissions.includes(p))
   }
 }

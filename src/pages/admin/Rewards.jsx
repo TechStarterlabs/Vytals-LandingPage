@@ -3,6 +3,7 @@ import { Eye, Edit, Trash2 } from "lucide-react"
 import DataTable from "@/components/DataTable"
 import { useToast } from "@/hooks/use-toast"
 import { useNavigate } from "react-router-dom"
+import { usePermissions } from "@/contexts/PermissionContext"
 
 export default function Rewards() {
   const [rewards] = useState([
@@ -20,6 +21,7 @@ export default function Rewards() {
   ])
   const { toast } = useToast()
   const navigate = useNavigate()
+  const { canCreate, canUpdate, canDelete } = usePermissions()
 
   const handleView = (reward) => {
     navigate(`/admin/rewards/${reward.id}`)
@@ -85,20 +87,24 @@ export default function Rewards() {
           >
             <Eye className="h-4 w-4 text-gray-600" />
           </button>
-          <button
-            onClick={() => handleEdit(row)}
-            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Edit"
-          >
-            <Edit className="h-4 w-4 text-gray-600" />
-          </button>
-          <button
-            onClick={() => handleDelete(row.id)}
-            className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
-            title="Delete"
-          >
-            <Trash2 className="h-4 w-4 text-red-600" />
-          </button>
+          {canUpdate('rewards') && (
+            <button
+              onClick={() => handleEdit(row)}
+              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Edit"
+            >
+              <Edit className="h-4 w-4 text-gray-600" />
+            </button>
+          )}
+          {canDelete('rewards') && (
+            <button
+              onClick={() => handleDelete(row.id)}
+              className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete"
+            >
+              <Trash2 className="h-4 w-4 text-red-600" />
+            </button>
+          )}
         </div>
       )
     }
@@ -111,7 +117,7 @@ export default function Rewards() {
         subtitle="Manage all rewards and discount codes"
         columns={columns}
         data={rewards}
-        onAdd={() => navigate('/admin/rewards/new')}
+        onAdd={canCreate('rewards') ? () => navigate('/admin/rewards/new') : undefined}
         addButtonText="Add Reward"
         exportFileName="rewards"
       />

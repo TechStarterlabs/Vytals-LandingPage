@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 import { useNavigate } from "react-router-dom"
 import { useConfirm } from "@/hooks/use-confirm"
+import { usePermissions } from "@/contexts/PermissionContext"
 
 export default function COA() {
   const [coas, setCoas] = useState([])
@@ -13,6 +14,7 @@ export default function COA() {
   const { toast } = useToast()
   const navigate = useNavigate()
   const { confirm, isOpen, config, handleConfirm, handleCancel } = useConfirm()
+  const { canCreate, canUpdate, canDelete } = usePermissions()
 
   useEffect(() => {
     fetchCOAs()
@@ -77,7 +79,7 @@ export default function COA() {
     {
       header: "BATCH CODE",
       cell: (row) => (
-        <span className="font-mono text-sm font-medium text-gray-900">
+        <span className="text-sm text-gray-900">
           {row.batch?.batch_code || '-'}
         </span>
       )
@@ -86,8 +88,8 @@ export default function COA() {
       header: "PRODUCT",
       cell: (row) => (
         <div>
-          <p className="font-medium text-gray-900">{row.batch?.product?.name || '-'}</p>
-          <p className="text-xs text-gray-500 font-mono">{row.batch?.product?.product_code || '-'}</p>
+          <p className="text-gray-900">{row.batch?.product?.name || '-'}</p>
+          <p className="text-xs text-gray-500">{row.batch?.product?.product_code || '-'}</p>
         </div>
       )
     },
@@ -131,20 +133,24 @@ export default function COA() {
           >
             <Eye className="h-4 w-4 text-gray-600" />
           </button>
-          <button
-            onClick={() => handleEdit(row)}
-            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Edit"
-          >
-            <Edit className="h-4 w-4 text-gray-600" />
-          </button>
-          <button
-            onClick={() => handleDelete(row.coa_id)}
-            className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
-            title="Delete"
-          >
-            <Trash2 className="h-4 w-4 text-red-600" />
-          </button>
+          {canUpdate('coa') && (
+            <button
+              onClick={() => handleEdit(row)}
+              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Edit"
+            >
+              <Edit className="h-4 w-4 text-gray-600" />
+            </button>
+          )}
+          {canDelete('coa') && (
+            <button
+              onClick={() => handleDelete(row.coa_id)}
+              className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete"
+            >
+              <Trash2 className="h-4 w-4 text-red-600" />
+            </button>
+          )}
         </div>
       )
     }
@@ -173,7 +179,7 @@ export default function COA() {
         data={coas}
         showAddButton={false}
         exportFileName="coa-list"
-        customActions={
+        customActions={canCreate('coa') ? (
           <div className="flex gap-3">
             <button
               onClick={() => navigate('/admin/coa/new')}
@@ -190,7 +196,7 @@ export default function COA() {
               Bulk Upload
             </button>
           </div>
-        }
+        ) : undefined}
       />
     </div>
   )

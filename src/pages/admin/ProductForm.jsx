@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { apiClient } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
+import PermissionRoute from "@/components/PermissionRoute"
 
 export default function ProductForm() {
   const { id } = useParams()
@@ -13,6 +14,9 @@ export default function ProductForm() {
   const { toast } = useToast()
   const isEdit = id && id !== 'new'
   const [loading, setLoading] = useState(isEdit)
+  
+  // Determine required permission based on action
+  const requiredPermission = isEdit ? 'products.update' : 'products.create'
   
   const {
     register,
@@ -92,7 +96,8 @@ export default function ProductForm() {
   }
 
   return (
-    <div className="space-y-6">
+    <PermissionRoute permission={requiredPermission}>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button
@@ -263,5 +268,6 @@ export default function ProductForm() {
         </div>
       </form>
     </div>
+    </PermissionRoute>
   )
 }

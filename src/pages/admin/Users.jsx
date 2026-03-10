@@ -7,6 +7,7 @@ import DataTable from "@/components/DataTable"
 import { useNavigate } from "react-router-dom"
 import { useConfirm } from "@/hooks/use-confirm"
 import ConfirmDialog from "@/components/ConfirmDialog"
+import { usePermissions } from "@/contexts/PermissionContext"
 
 export default function Users() {
   const [users, setUsers] = useState([])
@@ -15,6 +16,7 @@ export default function Users() {
   const { toast } = useToast()
   const navigate = useNavigate()
   const { confirm, isOpen, config, handleConfirm, handleCancel } = useConfirm()
+  const { canCreate, canUpdate, canDelete } = usePermissions()
 
   useEffect(() => {
     fetchUsers()
@@ -86,7 +88,7 @@ export default function Users() {
     {
       header: "ROLE",
       cell: (row) => (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-blue-100 text-blue-800">
           {row.role?.name || "No Role"}
         </span>
       )
@@ -94,7 +96,7 @@ export default function Users() {
     {
       header: "STATUS",
       cell: (row) => (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs ${
           row.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
         }`}>
           {row.is_active ? "Active" : "Inactive"}
@@ -120,20 +122,24 @@ export default function Users() {
           >
             <Eye className="h-4 w-4 text-gray-600" />
           </button>
-          <button
-            onClick={() => handleEdit(row)}
-            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Edit"
-          >
-            <Edit className="h-4 w-4 text-gray-600" />
-          </button>
-          <button
-            onClick={() => handleDelete(row.user_id)}
-            className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
-            title="Delete"
-          >
-            <Trash2 className="h-4 w-4 text-red-600" />
-          </button>
+          {canUpdate('users') && (
+            <button
+              onClick={() => handleEdit(row)}
+              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Edit"
+            >
+              <Edit className="h-4 w-4 text-gray-600" />
+            </button>
+          )}
+          {canDelete('users') && (
+            <button
+              onClick={() => handleDelete(row.user_id)}
+              className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete"
+            >
+              <Trash2 className="h-4 w-4 text-red-600" />
+            </button>
+          )}
         </div>
       )
     }
@@ -160,7 +166,7 @@ export default function Users() {
         subtitle="Manage all admin users in the system"
         columns={columns}
         data={users}
-        onAdd={() => navigate('/admin/users/new')}
+        onAdd={canCreate('users') ? () => navigate('/admin/users/new') : undefined}
         addButtonText="Add User"
         exportFileName="admin-users"
       />

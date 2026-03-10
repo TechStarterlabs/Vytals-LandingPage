@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 import { useNavigate } from "react-router-dom"
 import { useConfirm } from "@/hooks/use-confirm"
+import { usePermissions } from "@/contexts/PermissionContext"
 
 export default function Customers() {
   const [customers, setCustomers] = useState([])
@@ -13,6 +14,7 @@ export default function Customers() {
   const { toast } = useToast()
   const navigate = useNavigate()
   const { confirm, isOpen, config, handleConfirm, handleCancel } = useConfirm()
+  const { canCreate, canUpdate, canDelete } = usePermissions()
 
   useEffect(() => {
     fetchCustomers()
@@ -118,7 +120,7 @@ export default function Customers() {
     {
       header: "STATUS",
       cell: (row) => (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-green-100 text-green-800">
           {row.status}
         </span>
       )
@@ -138,20 +140,24 @@ export default function Customers() {
           >
             <Eye className="h-4 w-4 text-gray-600" />
           </button>
-          <button
-            onClick={() => handleEdit(row)}
-            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Edit"
-          >
-            <Edit className="h-4 w-4 text-gray-600" />
-          </button>
-          <button
-            onClick={() => handleDelete(row.id)}
-            className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
-            title="Delete"
-          >
-            <Trash2 className="h-4 w-4 text-red-600" />
-          </button>
+          {canUpdate('customers') && (
+            <button
+              onClick={() => handleEdit(row)}
+              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Edit"
+            >
+              <Edit className="h-4 w-4 text-gray-600" />
+            </button>
+          )}
+          {canDelete('customers') && (
+            <button
+              onClick={() => handleDelete(row.id)}
+              className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete"
+            >
+              <Trash2 className="h-4 w-4 text-red-600" />
+            </button>
+          )}
         </div>
       )
     }
@@ -178,7 +184,7 @@ export default function Customers() {
         subtitle="Manage all customers in the system"
         columns={columns}
         data={customers}
-        onAdd={() => navigate('/admin/customers/new')}
+        onAdd={canCreate('customers') ? () => navigate('/admin/customers/new') : undefined}
         addButtonText="Add Customer"
         exportFileName="customers"
       />

@@ -19,19 +19,40 @@ class ApiClient {
     // Remove customToken from config as it's not a valid fetch option
     delete config.customToken
 
-    const response = await fetch(`${API_URL}${endpoint}`, config)
-    const data = await response.json()
-
-    if (!response.ok) {
-      // Only redirect to login for admin routes with 401 errors
-      if (response.status === 401 && isAdminRoute) {
-        authService.removeToken()
-        window.location.href = '/admin/login'
+    try {
+      const response = await fetch(`${API_URL}${endpoint}`, config)
+      
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Non-JSON response received:', response.status, response.statusText)
+        throw new Error('Server returned non-JSON response')
       }
-      throw new Error(data.message || 'Request failed')
-    }
+      
+      const data = await response.json()
 
-    return data
+      if (!response.ok) {
+        // Only redirect to login for admin routes with 401 errors AND valid error response
+        if (response.status === 401 && isAdminRoute && data.message) {
+          authService.removeToken()
+          window.location.href = '/admin/login'
+        }
+        throw new Error(data.message || `Request failed with status ${response.status}`)
+      }
+
+      return data
+    } catch (error) {
+      // Network errors or JSON parse errors - don't logout
+      if (error.message === 'Failed to fetch') {
+        console.error('Network error - server may be down')
+        throw new Error('Network error. Please check if the server is running.')
+      }
+      if (error.name === 'SyntaxError') {
+        console.error('JSON parse error - server returned invalid JSON')
+        throw new Error('Server error. Please try again later.')
+      }
+      throw error
+    }
   }
 
   get(endpoint, customToken = null) {

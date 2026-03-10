@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { authService } from "@/lib/auth"
+import { usePermissions } from "@/contexts/PermissionContext"
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 
 export default function AdminLogin() {
   const navigate = useNavigate()
   const { toast } = useToast()
+  const { refreshPermissions } = usePermissions()
   
   const {
     register,
@@ -38,6 +40,7 @@ export default function AdminLogin() {
         throw new Error(result.message || 'Login failed')
       }
 
+      // Store token and user
       authService.setToken(result.data.token)
       authService.setUser(result.data.user)
       
@@ -46,7 +49,11 @@ export default function AdminLogin() {
         description: "Login successful!",
         variant: "success",
       })
-      navigate("/admin/dashboard")
+      
+      // Refresh permissions and navigate
+      await refreshPermissions()
+      navigate('/admin/dashboard')
+      
     } catch (err) {
       setError("root", {
         message: err.message || "Invalid email or password"

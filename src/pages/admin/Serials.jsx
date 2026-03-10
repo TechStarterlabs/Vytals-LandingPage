@@ -4,6 +4,7 @@ import DataTable from "@/components/DataTable"
 import { apiClient } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 import { useNavigate, useLocation } from "react-router-dom"
+import { usePermissions } from "@/contexts/PermissionContext"
 
 export default function Serials() {
   const [serials, setSerials] = useState([])
@@ -11,6 +12,7 @@ export default function Serials() {
   const { toast } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
+  const { canCreate, canUpdate, canDelete } = usePermissions()
 
   useEffect(() => {
     fetchSerials()
@@ -74,23 +76,23 @@ export default function Serials() {
     {
       header: "SERIAL NUMBER",
       cell: (row) => (
-        <span className="font-mono text-sm">{row.serial_number}</span>
+        <span className="text-sm">{row.serial_number}</span>
       )
     },
     {
       header: "BATCH",
       cell: (row) => (
         <div>
-          <p className="font-medium text-gray-900">{row.batch?.batch_code || '-'}</p>
-          <p className="text-xs text-gray-500">{row.batch?.product?.name || '-'}</p>
+          <p className="text-gray-900">{row.batch_code || '-'}</p>
+          <p className="text-xs text-gray-500">{row.product_name || '-'}</p>
         </div>
       )
     },
     {
       header: "PRODUCT CODE",
       cell: (row) => (
-        <span className="font-mono text-xs text-gray-600">
-          {row.batch?.product?.product_code || '-'}
+        <span className="text-xs text-gray-600">
+          {row.product_code || '-'}
         </span>
       )
     },
@@ -98,7 +100,7 @@ export default function Serials() {
       header: "VERIFICATION",
       cell: (row) => (
         <div>
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs ${
             row.is_verified ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
           }`}>
             {row.is_verified ? "✓ Verified" : "Not Verified"}
@@ -146,22 +148,26 @@ export default function Serials() {
           >
             <Eye className="h-4 w-4 text-gray-600" />
           </button>
-          <button
-            onClick={() => handleEdit(row)}
-            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Edit"
-            disabled={row.is_verified}
-          >
-            <Edit className={`h-4 w-4 ${row.is_verified ? 'text-gray-300' : 'text-gray-600'}`} />
-          </button>
-          <button
-            onClick={() => handleDelete(row.serial_number_id)}
-            className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
-            title="Delete"
-            disabled={row.is_verified}
-          >
-            <Trash2 className={`h-4 w-4 ${row.is_verified ? 'text-gray-300' : 'text-red-600'}`} />
-          </button>
+          {canUpdate('serials') && (
+            <button
+              onClick={() => handleEdit(row)}
+              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Edit"
+              disabled={row.is_verified}
+            >
+              <Edit className={`h-4 w-4 ${row.is_verified ? 'text-gray-300' : 'text-gray-600'}`} />
+            </button>
+          )}
+          {canDelete('serials') && (
+            <button
+              onClick={() => handleDelete(row.serial_number_id)}
+              className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete"
+              disabled={row.is_verified}
+            >
+              <Trash2 className={`h-4 w-4 ${row.is_verified ? 'text-gray-300' : 'text-red-600'}`} />
+            </button>
+          )}
         </div>
       )
     }
@@ -184,7 +190,7 @@ export default function Serials() {
         data={serials}
         showAddButton={false}
         exportFileName="serial-numbers"
-        customActions={
+        customActions={canCreate('serials') ? (
           <div className="flex gap-3">
             <button
               onClick={() => navigate('/admin/serials/new')}
@@ -201,7 +207,7 @@ export default function Serials() {
               Bulk Upload
             </button>
           </div>
-        }
+        ) : undefined}
       />
     </div>
   )

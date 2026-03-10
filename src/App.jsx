@@ -1,10 +1,12 @@
 import { lazy, Suspense, useEffect } from "react"
-import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom"
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useNavigate } from "react-router-dom"
 
 import Loader from "@/components/Loader"
 import Navbar from "@/components/Navbar"
 import { Toaster } from "@/components/ui/toaster"
 import { VerificationStoreProvider } from "@/lib/verification-store"
+import { PermissionProvider, usePermissions } from "@/contexts/PermissionContext"
+import { getFirstAccessibleRoute } from "@/utils/permissions"
 
 // Lazy load only admin components
 const Home = lazy(() => import("@/pages/Home"))
@@ -27,6 +29,8 @@ const COAView = lazy(() => import("@/pages/admin/COAView"))
 const COAForm = lazy(() => import("@/pages/admin/COAForm"))
 const COABulkUpload = lazy(() => import("@/pages/admin/COABulkUpload"))
 const ScanLogs = lazy(() => import("@/pages/admin/ScanLogs"))
+const IntegrationLogs = lazy(() => import("@/pages/admin/IntegrationLogs"))
+const IntegrationLogView = lazy(() => import("@/pages/admin/IntegrationLogView"))
 const Customers = lazy(() => import("@/pages/admin/Customers"))
 const CustomerView = lazy(() => import("@/pages/admin/CustomerView"))
 const CustomerForm = lazy(() => import("@/pages/admin/CustomerForm"))
@@ -37,6 +41,11 @@ const Products = lazy(() => import("@/pages/admin/Products"))
 const ProductView = lazy(() => import("@/pages/admin/ProductView"))
 const ProductForm = lazy(() => import("@/pages/admin/ProductForm"))
 const Users = lazy(() => import("@/pages/admin/Users"))
+const UserView = lazy(() => import("@/pages/admin/UserView"))
+const UserForm = lazy(() => import("@/pages/admin/UserForm"))
+const Roles = lazy(() => import("@/pages/admin/Roles"))
+const RoleView = lazy(() => import("@/pages/admin/RoleView"))
+const RoleForm = lazy(() => import("@/pages/admin/RoleForm"))
 
 function ScrollToTopAndHash() {
   const location = useLocation()
@@ -53,6 +62,20 @@ function ScrollToTopAndHash() {
   }, [location.pathname, location.hash])
 
   return null
+}
+
+function AdminIndexRedirect() {
+  const navigate = useNavigate()
+  const { hasPermission, isLoading } = usePermissions()
+  
+  useEffect(() => {
+    if (isLoading) return
+    
+    const firstRoute = getFirstAccessibleRoute(hasPermission)
+    navigate(firstRoute, { replace: true })
+  }, [navigate, hasPermission, isLoading])
+
+  return <Loader />
 }
 
 function AppLayout() {
@@ -101,87 +124,95 @@ function AdminLayout() {
 function App() {
   return (
     <VerificationStoreProvider>
-      <BrowserRouter>
-        <ScrollToTopAndHash />
-        <Toaster />
-        <Routes>
-          <Route element={<AppLayout />}>
+      <PermissionProvider>
+        <BrowserRouter>
+          <ScrollToTopAndHash />
+          <Toaster />
+          <Routes>
+            <Route element={<AppLayout />}>
+              <Route
+                path="/"
+                element={
+                  <Suspense fallback={<Loader />}>
+                    <Home />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/verify"
+                element={
+                  <Suspense fallback={<Loader />}>
+                    <Verification />
+                  </Suspense>
+                }
+              />
+            </Route>
+
             <Route
-              path="/"
+              path="/admin/login"
               element={
                 <Suspense fallback={<Loader />}>
-                  <Home />
+                  <AdminLogin />
                 </Suspense>
               }
             />
+            
             <Route
-              path="/verify"
+              path="/admin"
               element={
                 <Suspense fallback={<Loader />}>
-                  <Verification />
+                  <ProtectedRoute>
+                    <AdminLayout />
+                  </ProtectedRoute>
                 </Suspense>
               }
-            />
-          </Route>
+            >
+              <Route index element={<AdminIndexRedirect />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="batches" element={<Batches />} />
+              <Route path="batches/new" element={<BatchForm />} />
+              <Route path="batches/:id" element={<BatchView />} />
+              <Route path="batches/:id/edit" element={<BatchForm />} />
+              <Route path="serials" element={<Serials />} />
+              <Route path="serials/new" element={<SerialForm />} />
+              <Route path="serials/bulk" element={<SerialBulkUpload />} />
+              <Route path="serials/:id" element={<SerialView />} />
+              <Route path="serials/:id/edit" element={<SerialForm />} />
+              <Route path="coa" element={<COA />} />
+              <Route path="coa/new" element={<COAForm />} />
+              <Route path="coa/bulk" element={<COABulkUpload />} />
+              <Route path="coa/:id" element={<COAView />} />
+              <Route path="coa/:id/edit" element={<COAForm />} />
+              <Route path="scan-logs" element={<ScanLogs />} />
+              <Route path="scan-logs/:id" element={<div>Scan Log View - Coming Soon</div>} />
+              <Route path="integration-logs" element={<IntegrationLogs />} />
+              <Route path="integration-logs/:logId" element={<IntegrationLogView />} />
+              <Route path="customers" element={<Customers />} />
+              <Route path="customers/new" element={<CustomerForm />} />
+              <Route path="customers/:id" element={<CustomerView />} />
+              <Route path="customers/:id/edit" element={<CustomerForm />} />
+              <Route path="rewards" element={<Rewards />} />
+              <Route path="rewards/new" element={<RewardForm />} />
+              <Route path="rewards/:id" element={<RewardView />} />
+              <Route path="rewards/:id/edit" element={<RewardForm />} />
+              <Route path="products" element={<Products />} />
+              <Route path="products/new" element={<ProductForm />} />
+              <Route path="products/:id" element={<ProductView />} />
+              <Route path="products/:id/edit" element={<ProductForm />} />
+              <Route path="users" element={<Users />} />
+              <Route path="users/new" element={<UserForm />} />
+              <Route path="users/:id" element={<UserView />} />
+              <Route path="users/:id/edit" element={<UserForm />} />
+              <Route path="roles" element={<Roles />} />
+              <Route path="roles/new" element={<RoleForm />} />
+              <Route path="roles/:id" element={<RoleView />} />
+              <Route path="roles/:id/edit" element={<RoleForm />} />
+            </Route>
 
-          <Route
-            path="/admin/login"
-            element={
-              <Suspense fallback={<Loader />}>
-                <AdminLogin />
-              </Suspense>
-            }
-          />
-          
-          <Route
-            path="/admin"
-            element={
-              <Suspense fallback={<Loader />}>
-                <ProtectedRoute>
-                  <AdminLayout />
-                </ProtectedRoute>
-              </Suspense>
-            }
-          >
-            <Route index element={<Navigate replace to="/admin/dashboard" />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="batches" element={<Batches />} />
-            <Route path="batches/new" element={<BatchForm />} />
-            <Route path="batches/:id" element={<BatchView />} />
-            <Route path="batches/:id/edit" element={<BatchForm />} />
-            <Route path="serials" element={<Serials />} />
-            <Route path="serials/new" element={<SerialForm />} />
-            <Route path="serials/bulk" element={<SerialBulkUpload />} />
-            <Route path="serials/:id" element={<SerialView />} />
-            <Route path="serials/:id/edit" element={<SerialForm />} />
-            <Route path="coa" element={<COA />} />
-            <Route path="coa/new" element={<COAForm />} />
-            <Route path="coa/bulk" element={<COABulkUpload />} />
-            <Route path="coa/:id" element={<COAView />} />
-            <Route path="coa/:id/edit" element={<COAForm />} />
-            <Route path="scan-logs" element={<ScanLogs />} />
-            <Route path="scan-logs/:id" element={<div>Scan Log View - Coming Soon</div>} />
-            <Route path="customers" element={<Customers />} />
-            <Route path="customers/new" element={<CustomerForm />} />
-            <Route path="customers/:id" element={<CustomerView />} />
-            <Route path="customers/:id/edit" element={<CustomerForm />} />
-            <Route path="rewards" element={<Rewards />} />
-            <Route path="rewards/new" element={<RewardForm />} />
-            <Route path="rewards/:id" element={<RewardView />} />
-            <Route path="rewards/:id/edit" element={<RewardForm />} />
-            <Route path="products" element={<Products />} />
-            <Route path="products/new" element={<ProductForm />} />
-            <Route path="products/:id" element={<ProductView />} />
-            <Route path="products/:id/edit" element={<ProductForm />} />
-            <Route path="users" element={<Users />} />
-            <Route path="users/new" element={<div>User Form - Coming Soon</div>} />
-            <Route path="users/:id" element={<div>User View - Coming Soon</div>} />
-            <Route path="users/:id/edit" element={<div>User Form - Coming Soon</div>} />
-          </Route>
-
-          <Route path="*" element={<Navigate replace to="/" />} />
-        </Routes>
-      </BrowserRouter>
+            <Route path="*" element={<Navigate replace to="/" />} />
+          </Routes>
+        </BrowserRouter>
+      </PermissionProvider>
     </VerificationStoreProvider>
   )
 }

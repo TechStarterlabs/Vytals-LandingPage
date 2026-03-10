@@ -4,11 +4,14 @@ import { ArrowLeft, Edit, Package } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { apiClient } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
+import PermissionRoute from "@/components/PermissionRoute"
+import { usePermissions } from "@/contexts/PermissionContext"
 
 export default function ProductView() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { toast } = useToast()
+  const { canUpdate } = usePermissions()
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -45,7 +48,8 @@ export default function ProductView() {
   }
 
   return (
-    <div className="space-y-6">
+    <PermissionRoute permission="products.view">
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -67,13 +71,15 @@ export default function ProductView() {
             </p>
           </div>
         </div>
-        <Button
-          onClick={() => navigate(`/admin/products/${id}/edit`)}
-          className="bg-[#11b5b2] hover:bg-[#0fa09d] text-white"
-        >
-          <Edit className="h-4 w-4 mr-2" />
-          Edit Product
-        </Button>
+        {canUpdate('products') && (
+          <Button
+            onClick={() => navigate(`/admin/products/${id}/edit`)}
+            className="bg-[#11b5b2] hover:bg-[#0fa09d] text-white"
+          >
+            <Edit className="h-4 w-4 mr-2" />
+            Edit Product
+          </Button>
+        )}
       </div>
 
       {/* Product Information */}
@@ -144,5 +150,6 @@ export default function ProductView() {
         </div>
       </div>
     </div>
+    </PermissionRoute>
   )
 }

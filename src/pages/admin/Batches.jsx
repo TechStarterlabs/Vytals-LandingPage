@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useConfirm } from "@/hooks/use-confirm"
+import { usePermissions } from "@/contexts/PermissionContext"
 
 export default function Batches() {
   const [batches, setBatches] = useState([])
@@ -14,6 +15,7 @@ export default function Batches() {
   const navigate = useNavigate()
   const location = useLocation()
   const { confirm, isOpen, config, handleConfirm, handleCancel } = useConfirm()
+  const { canCreate, canUpdate, canDelete } = usePermissions()
 
   useEffect(() => {
     fetchBatches()
@@ -94,7 +96,7 @@ export default function Batches() {
       header: "PRODUCT",
       cell: (row) => (
         <div>
-          <p className="font-medium text-gray-900">{row.product?.name || '-'}</p>
+          <p className="text-gray-900">{row.product?.name || '-'}</p>
           <p className="text-xs text-gray-500">{row.product?.product_code || '-'}</p>
         </div>
       )
@@ -107,11 +109,11 @@ export default function Batches() {
         const expired = isExpired(row.expiry_date)
         return (
           <div>
-            <p className={expired ? 'text-red-600 font-medium' : 'text-gray-900'}>
+            <p className={expired ? 'text-red-600' : 'text-gray-900'}>
               {date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
             </p>
             {expired && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-red-100 text-red-800">
                 Expired
               </span>
             )}
@@ -123,14 +125,14 @@ export default function Batches() {
       header: "SERIALS",
       cell: (row) => (
         <div className="text-center">
-          <p className="font-medium text-gray-900">{row.serial_count || 0}</p>
+          <p className="text-gray-900">{row.serial_count || 0}</p>
         </div>
       )
     },
     {
       header: "COA",
       cell: (row) => (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs ${
           row.has_coa ? "bg-green-100 text-green-800" : "bg-red-100 text-gray-800"
         }`}>
           {row.has_coa ? "Yes" : " No"}
@@ -142,7 +144,7 @@ export default function Batches() {
       cell: (row) => {
         const expired = isExpired(row.expiry_date)
         return (
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs ${
             expired ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
           }`}>
             {expired ? "Expired" : "Active"}
@@ -169,20 +171,24 @@ export default function Batches() {
           >
             <Eye className="h-4 w-4 text-gray-600" />
           </button>
-          <button
-            onClick={() => handleEdit(row)}
-            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Edit"
-          >
-            <Edit className="h-4 w-4 text-gray-600" />
-          </button>
-          <button
-            onClick={() => handleDelete(row.batch_id)}
-            className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
-            title="Delete"
-          >
-            <Trash2 className="h-4 w-4 text-red-600" />
-          </button>
+          {canUpdate('batches') && (
+            <button
+              onClick={() => handleEdit(row)}
+              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Edit"
+            >
+              <Edit className="h-4 w-4 text-gray-600" />
+            </button>
+          )}
+          {canDelete('batches') && (
+            <button
+              onClick={() => handleDelete(row.batch_id)}
+              className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete"
+            >
+              <Trash2 className="h-4 w-4 text-red-600" />
+            </button>
+          )}
         </div>
       )
     }
@@ -209,7 +215,7 @@ export default function Batches() {
         subtitle="Manage all product batches in the system"
         columns={columns}
         data={batches}
-        onAdd={() => navigate('/admin/batches/new')}
+        onAdd={canCreate('batches') ? () => navigate('/admin/batches/new') : undefined}
         addButtonText="Add Batch"
         exportFileName="batches"
       />

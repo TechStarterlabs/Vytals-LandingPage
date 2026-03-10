@@ -6,6 +6,8 @@ import { apiClient } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 import { useNavigate } from "react-router-dom"
 import { useConfirm } from "@/hooks/use-confirm"
+import { usePermissions } from "@/contexts/PermissionContext"
+import PermissionRoute from "@/components/PermissionRoute"
 
 export default function Products() {
   const [products, setProducts] = useState([])
@@ -13,6 +15,7 @@ export default function Products() {
   const { toast } = useToast()
   const navigate = useNavigate()
   const { confirm, isOpen, config, handleConfirm, handleCancel } = useConfirm()
+  const { canCreate, canUpdate, canDelete, permissions, hasPermission } = usePermissions()
 
   useEffect(() => {
     fetchProducts()
@@ -93,7 +96,7 @@ export default function Products() {
     {
       header: "BATCHES",
       cell: (row) => (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-blue-100 text-blue-800">
           {row.batch_count || 0}
         </span>
       )
@@ -117,20 +120,24 @@ export default function Products() {
           >
             <Eye className="h-4 w-4 text-gray-600" />
           </button>
-          <button
-            onClick={() => handleEdit(row)}
-            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Edit"
-          >
-            <Edit className="h-4 w-4 text-gray-600" />
-          </button>
-          <button
-            onClick={() => handleDelete(row.product_id)}
-            className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
-            title="Delete"
-          >
-            <Trash2 className="h-4 w-4 text-red-600" />
-          </button>
+          {canUpdate('products') && (
+            <button
+              onClick={() => handleEdit(row)}
+              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Edit"
+            >
+              <Edit className="h-4 w-4 text-gray-600" />
+            </button>
+          )}
+          {canDelete('products') && (
+            <button
+              onClick={() => handleDelete(row.product_id)}
+              className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete"
+            >
+              <Trash2 className="h-4 w-4 text-red-600" />
+            </button>
+          )}
         </div>
       )
     }
@@ -145,7 +152,7 @@ export default function Products() {
   }
 
   return (
-    <div>
+    <PermissionRoute permission="products.view">
       <ConfirmDialog
         isOpen={isOpen}
         onClose={handleCancel}
@@ -157,10 +164,10 @@ export default function Products() {
         subtitle="Manage all products in the system"
         columns={columns}
         data={products}
-        onAdd={() => navigate('/admin/products/new')}
+        onAdd={canCreate('products') ? () => navigate('/admin/products/new') : undefined}
         addButtonText="Add Product"
         exportFileName="products"
       />
-    </div>
+    </PermissionRoute>
   )
 }
