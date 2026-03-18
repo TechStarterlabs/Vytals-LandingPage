@@ -12,7 +12,7 @@ const HeroBackground = lazy(() => import("@/components/HeroBackground"))
 
 export default function HeroSection() {
   const navigate = useNavigate()
-  const { setHomeCompleted, setSerialAndBatch, setProductData } = useVerificationStore()
+  const { setLastMobile } = useVerificationStore()
   const { toast } = useToast()
   const formCardRef = useRef(null)
   const buttonRef = useRef(null)
@@ -39,23 +39,11 @@ export default function HeroSection() {
         const { product, batch, serial_number: serialPayload } = response.data
         const serialValue = serialPayload?.serial_number || normalizedSerial
         
-        // Store product data in verification store
-        setProductData({
-          product,
-          batch,
-          serial: serialValue,
-          isVerified: response.data.is_verified,
-          isFirstScan: response.data.is_first_scan
-        })
-        
         // Create encoded reference for URL
         const encoded = btoa(JSON.stringify({ 
           s: normalizedSerial, 
           b: batch.batch_code 
         }))
-        
-        setSerialAndBatch(normalizedSerial, batch.batch_code)
-        setHomeCompleted(true)
 
         // Animation and navigation
         if (formCardRef.current) {

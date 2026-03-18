@@ -247,7 +247,7 @@ export default function RoleForm() {
                   errors.name ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="e.g., Manager, Supervisor"
-                disabled={isEdit && formData.name === 'superadmin'}
+                disabled={isEdit && formData.name === 'user'}
               />
               {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
             </div>

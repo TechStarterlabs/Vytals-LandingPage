@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Eye, Edit, Trash2 } from "lucide-react"
+import { Eye, Edit, Trash2, RotateCcw } from "lucide-react"
 import DataTable from "@/components/DataTable"
 import ConfirmDialog from "@/components/ConfirmDialog"
 import { apiClient } from "@/lib/api"
@@ -11,6 +11,7 @@ import { usePermissions } from "@/contexts/PermissionContext"
 export default function Batches() {
   const [batches, setBatches] = useState([])
   const [loading, setLoading] = useState(true)
+  const [showDeleted, setShowDeleted] = useState(false)
   const { toast } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
@@ -19,17 +20,16 @@ export default function Batches() {
 
   useEffect(() => {
     fetchBatches()
-  }, [])
+  }, [showDeleted])
 
   const fetchBatches = async () => {
     try {
       // Check if we need to filter by product (from navigation state)
       const productId = location.state?.productId
-      const endpoint = productId 
-        ? `/admin/batches?product_id=${productId}`
-        : '/admin/batches'
+      const params = { include_deleted: showDeleted }
+      if (productId) params.product_id = productId
       
-      const response = await apiClient.get(endpoint)
+      const response = await apiClient.get('/admin/batches', { params })
       setBatches(response.data.batches || [])
     } catch (error) {
       console.error('Failed to fetch batches:', error)
@@ -73,6 +73,33 @@ export default function Batches() {
       toast({
         title: "Error",
         description: error.message || "Failed to delete batch. It may have associated serial numbers.",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleRestore = async (batchId) => {
+    const confirmed = await confirm({
+      title: "Restore Batch",
+      message: "Are you sure you want to restore this batch?",
+      confirmText: "Restore",
+      cancelText: "Cancel"
+    })
+    
+    if (!confirmed) return
+    
+    try {
+      await apiClient.post(`/admin/batches/${batchId}/restore`)
+      toast({
+        title: "Success",
+        description: "Batch restored successfully",
+        variant: "success"
+      })
+      fetchBatches()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to restore batch",
         variant: "destructive"
       })
     }
@@ -164,30 +191,47 @@ export default function Batches() {
       header: "ACTIONS",
       cell: (row) => (
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => handleView(row)}
-            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-            title="View"
-          >
-            <Eye className="h-4 w-4 text-gray-600" />
-          </button>
-          {canUpdate('batches') && (
-            <button
-              onClick={() => handleEdit(row)}
-              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Edit"
-            >
-              <Edit className="h-4 w-4 text-gray-600" />
-            </button>
-          )}
-          {canDelete('batches') && (
-            <button
-              onClick={() => handleDelete(row.batch_id)}
-              className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
-              title="Delete"
-            >
-              <Trash2 className="h-4 w-4 text-red-600" />
-            </button>
+          {!row.deleted_at ? (
+            <>
+              <button
+                onClick={() => handleView(row)}
+                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                title="View"
+              >
+                <Eye className="h-4 w-4 text-gray-600" />
+              </button>
+              {canUpdate('batches') && (
+                <button
+                  onClick={() => handleEdit(row)}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Edit"
+                >
+                  <Edit className="h-4 w-4 text-gray-600" />
+                </button>
+              )}
+              {canDelete('batches') && (
+                <button
+                  onClick={() => handleDelete(row.batch_id)}
+                  className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Delete"
+                >
+                  <Trash2 className="h-4 w-4 text-red-600" />
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              {canDelete('batches') && (
+                <button
+                  onClick={() => handleRestore(row.batch_id)}
+                  className="p-1.5 hover:bg-green-50 rounded-lg transition-colors"
+                  title="Restore"
+                >
+                  <RotateCcw className="h-4 w-4 text-green-600" />
+                </button>
+              )}
+              <span className="text-xs text-red-600 font-medium">Deleted</span>
+            </>
           )}
         </div>
       )
@@ -218,6 +262,18 @@ export default function Batches() {
         onAdd={canCreate('batches') ? () => navigate('/admin/batches/new') : undefined}
         addButtonText="Add Batch"
         exportFileName="batches"
+        customHeaderActions={canDelete('batches') ? (
+          <button
+            onClick={() => setShowDeleted(!showDeleted)}
+            className={`px-4 py-2 rounded-lg border transition-colors ${
+              showDeleted 
+                ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100' 
+                : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            {showDeleted ? 'Hide Deleted' : 'Show Deleted'}
+          </button>
+        ) : undefined}
       />
     </div>
   )

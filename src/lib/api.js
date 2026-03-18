@@ -4,7 +4,8 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'
 
 class ApiClient {
   async request(endpoint, options = {}) {
-    const token = options.customToken || authService.getToken()
+    // Use customToken if provided (including null), otherwise fall back to authService
+    const token = options.hasOwnProperty('customToken') ? options.customToken : authService.getToken()
     const isAdminRoute = endpoint.startsWith('/admin')
     
     const config = {
@@ -55,28 +56,64 @@ class ApiClient {
     }
   }
 
-  get(endpoint, customToken = null) {
-    return this.request(endpoint, { method: 'GET', customToken })
+  get(endpoint, options = {}) {
+    // Handle query parameters
+    if (options.params) {
+      const queryParams = new URLSearchParams()
+      Object.entries(options.params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          queryParams.append(key, value)
+        }
+      })
+      const queryString = queryParams.toString()
+      if (queryString) {
+        endpoint += (endpoint.includes('?') ? '&' : '?') + queryString
+      }
+    }
+    
+    const requestOptions = { method: 'GET' }
+    // Only pass customToken if it was explicitly provided
+    if (options.hasOwnProperty('customToken')) {
+      requestOptions.customToken = options.customToken
+    }
+    
+    return this.request(endpoint, requestOptions)
   }
 
-  post(endpoint, data, customToken = null) {
-    return this.request(endpoint, {
+  post(endpoint, data, options = {}) {
+    const requestOptions = {
       method: 'POST',
       body: JSON.stringify(data),
-      customToken,
-    })
+    }
+    // Only pass customToken if it was explicitly provided
+    if (options.hasOwnProperty('customToken')) {
+      requestOptions.customToken = options.customToken
+    }
+    
+    return this.request(endpoint, requestOptions)
   }
 
-  put(endpoint, data, customToken = null) {
-    return this.request(endpoint, {
+  put(endpoint, data, options = {}) {
+    const requestOptions = {
       method: 'PUT',
       body: JSON.stringify(data),
-      customToken,
-    })
+    }
+    // Only pass customToken if it was explicitly provided
+    if (options.hasOwnProperty('customToken')) {
+      requestOptions.customToken = options.customToken
+    }
+    
+    return this.request(endpoint, requestOptions)
   }
 
-  delete(endpoint, customToken = null) {
-    return this.request(endpoint, { method: 'DELETE', customToken })
+  delete(endpoint, options = {}) {
+    const requestOptions = { method: 'DELETE' }
+    // Only pass customToken if it was explicitly provided
+    if (options.hasOwnProperty('customToken')) {
+      requestOptions.customToken = options.customToken
+    }
+    
+    return this.request(endpoint, requestOptions)
   }
 }
 
@@ -86,7 +123,15 @@ export const apiClient = new ApiClient()
 export const verificationApi = {
   // Verify product with serial number only
   async verifyProduct(serialNumber) {
-    return apiClient.post('/verify/product', { serial_number: serialNumber })
+    // Get user token from localStorage if available
+    const userToken = localStorage.getItem('vytals-user-token')
+    
+    return apiClient.request('/verify/product', {
+      method: 'POST',
+      body: JSON.stringify({ serial_number: serialNumber }),
+      headers: userToken ? { Authorization: `Bearer ${userToken}` } : {},
+      customToken: userToken || null // Explicitly pass null to prevent admin token fallback
+    })
   },
 
   // Send OTP for verification

@@ -18,20 +18,8 @@ export default function SerialView() {
 
   const fetchSerial = async () => {
     try {
-      // TODO: Replace with actual API call
-      // const data = await apiClient.get(`/admin/serials/${id}`)
-      // setSerial(data.data)
-      
-      // Mock data
-      setSerial({
-        id: parseInt(id),
-        serial_number: "SN123456789",
-        batch_code: "BATCH001",
-        product_name: "Product A",
-        status: "Available",
-        scanned: "No",
-        created_at: "01/01/26"
-      })
+      const response = await apiClient.get(`/admin/serials/${id}`)
+      setSerial(response.data)
     } catch (error) {
       toast({
         title: "Error",
@@ -47,7 +35,7 @@ export default function SerialView() {
     if (!confirm("Are you sure you want to delete this serial number?")) return
     
     try {
-      // await apiClient.delete(`/admin/serials/${id}`)
+      await apiClient.delete(`/admin/serials/${id}`)
       toast({
         title: "Success",
         description: "Serial number deleted successfully",
@@ -57,7 +45,7 @@ export default function SerialView() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to delete serial number",
+        description: error.message || "Failed to delete serial number",
         variant: "destructive"
       })
     }
@@ -104,6 +92,8 @@ export default function SerialView() {
             variant="outline"
             onClick={() => navigate(`/admin/serials/${id}/edit`)}
             className="border-gray-300 flex-1 sm:flex-none"
+            disabled={serial.is_coa_unlocked}
+            title={serial.is_coa_unlocked ? "COA unlocked serials cannot be edited" : "Edit serial"}
           >
             <Edit className="h-4 w-4 mr-2" />
             Edit
@@ -112,6 +102,8 @@ export default function SerialView() {
             variant="outline"
             onClick={handleDelete}
             className="border-red-300 text-red-600 hover:bg-red-50 flex-1 sm:flex-none"
+            disabled={serial.is_coa_unlocked}
+            title={serial.is_coa_unlocked ? "COA unlocked serials cannot be deleted" : "Delete serial"}
           >
             <Trash2 className="h-4 w-4 mr-2" />
             Delete
@@ -133,37 +125,88 @@ export default function SerialView() {
           
           <div>
             <label className="text-sm font-medium text-gray-500">Batch Code</label>
-            <p className="mt-1 text-base text-gray-900">{serial.batch_code}</p>
+            <p className="mt-1 text-base text-gray-900">{serial.batch?.batch_code || "N/A"}</p>
           </div>
           
           <div>
             <label className="text-sm font-medium text-gray-500">Product</label>
-            <p className="mt-1 text-base text-gray-900">{serial.product_name}</p>
+            <p className="mt-1 text-base text-gray-900">{serial.batch?.product?.name || "N/A"}</p>
           </div>
           
           <div>
-            <label className="text-sm font-medium text-gray-500">Status</label>
-            <p className="mt-1">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                {serial.status}
-              </span>
-            </p>
+            <label className="text-sm font-medium text-gray-500">Product Code</label>
+            <p className="mt-1 text-base text-gray-900">{serial.batch?.product?.product_code || "N/A"}</p>
           </div>
           
           <div>
-            <label className="text-sm font-medium text-gray-500">Scanned</label>
+            <label className="text-sm font-medium text-gray-500">Verification Status</label>
             <p className="mt-1">
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                serial.scanned === "Yes" ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-800"
+                serial.is_coa_unlocked 
+                  ? "bg-green-100 text-green-800" 
+                  : serial.is_scanned 
+                    ? "bg-blue-100 text-blue-800" 
+                    : "bg-gray-100 text-gray-800"
               }`}>
-                {serial.scanned}
+                {serial.is_coa_unlocked ? "COA Unlocked" : serial.is_scanned ? "Scanned" : "Unscanned"}
               </span>
             </p>
           </div>
+          
+          {serial.is_scanned && serial.scanned_at && (
+            <div>
+              <label className="text-sm font-medium text-gray-500">Scanned At</label>
+              <p className="mt-1 text-sm text-gray-900">
+                {new Date(serial.scanned_at).toLocaleString('en-GB', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
+            </div>
+          )}
+          
+          {serial.is_coa_unlocked && serial.coa_unlocked_at && (
+            <div>
+              <label className="text-sm font-medium text-gray-500">COA Unlocked At</label>
+              <p className="mt-1 text-base text-gray-900">
+                {new Date(serial.coa_unlocked_at).toLocaleString('en-IN', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: true
+                })}
+              </p>
+            </div>
+          )}
+          
+          {serial.verified_by && (
+            <>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Verified By</label>
+                <p className="mt-1 text-base text-gray-900">{serial.verified_by.name || "N/A"}</p>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-gray-500">Customer Mobile</label>
+                <p className="mt-1 text-base text-gray-900 font-mono">{serial.verified_by.mobile_number || "N/A"}</p>
+              </div>
+            </>
+          )}
           
           <div>
             <label className="text-sm font-medium text-gray-500">Created Date</label>
-            <p className="mt-1 text-base text-gray-900">{serial.created_at}</p>
+            <p className="mt-1 text-base text-gray-900">
+              {new Date(serial.created_at).toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: '2-digit'
+              })}
+            </p>
           </div>
         </div>
       </div>

@@ -18,20 +18,20 @@ export default function CustomerView() {
 
   const fetchCustomer = async () => {
     try {
-      // TODO: Replace with actual API call
-      // const data = await apiClient.get(`/admin/customers/${id}`)
-      // setCustomer(data.data)
+      const response = await apiClient.get(`/admin/users/${id}`)
+      const user = response.data.user
       
-      // Mock data
+      // Transform the data to match the expected format
       setCustomer({
-        id: parseInt(id),
-        name: "Akash Shetty",
-        mobile: "9987900884",
-        email: "shettykash20@gmail.com",
-        status: "Active",
-        created: "10/02/26",
-        total_scans: 5,
-        last_scan: "05/03/26"
+        user_id: user.user_id,
+        mobile_number: user.mobile_number,
+        email: user.email || '',
+        points_balance: user.points_balance || 0,
+        scan_count: user.scan_count || 0,
+        is_active: user.is_active,
+        last_login_at: user.last_login_at,
+        created_at: user.created_at,
+        role: user.role
       })
     } catch (error) {
       toast({
@@ -48,7 +48,7 @@ export default function CustomerView() {
     if (!confirm("Are you sure you want to delete this customer?")) return
     
     try {
-      // await apiClient.delete(`/admin/customers/${id}`)
+      await apiClient.delete(`/admin/users/${id}`)
       toast({
         title: "Success",
         description: "Customer deleted successfully",
@@ -58,7 +58,7 @@ export default function CustomerView() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to delete customer",
+        description: error.message || "Failed to delete customer",
         variant: "destructive"
       })
     }
@@ -128,13 +128,8 @@ export default function CustomerView() {
         
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="text-sm font-medium text-gray-500">Name</label>
-            <p className="mt-1 text-base text-gray-900">{customer.name}</p>
-          </div>
-          
-          <div>
             <label className="text-sm font-medium text-gray-500">Mobile</label>
-            <p className="mt-1 text-base text-gray-900">{customer.mobile}</p>
+            <p className="mt-1 text-base text-gray-900">{customer.mobile_number}</p>
           </div>
           
           <div>
@@ -145,26 +140,64 @@ export default function CustomerView() {
           <div>
             <label className="text-sm font-medium text-gray-500">Status</label>
             <p className="mt-1">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                {customer.status}
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                customer.is_active 
+                  ? "bg-green-100 text-green-800" 
+                  : "bg-red-100 text-red-800"
+              }`}>
+                {customer.is_active ? "Active" : "Inactive"}
               </span>
             </p>
           </div>
           
           <div>
-            <label className="text-sm font-medium text-gray-500">Created Date</label>
-            <p className="mt-1 text-base text-gray-900">{customer.created}</p>
+            <label className="text-sm font-medium text-gray-500">Points Balance</label>
+            <p className="mt-1 text-base text-gray-900 font-semibold text-[#338291]">
+              {customer.points_balance || 0}
+            </p>
           </div>
           
           <div>
             <label className="text-sm font-medium text-gray-500">Total Scans</label>
-            <p className="mt-1 text-base text-gray-900">{customer.total_scans}</p>
+            <p className="mt-1 text-base text-gray-900">{customer.scan_count || 0}</p>
           </div>
           
           <div>
-            <label className="text-sm font-medium text-gray-500">Last Scan</label>
-            <p className="mt-1 text-base text-gray-900">{customer.last_scan}</p>
+            <label className="text-sm font-medium text-gray-500">Last Login</label>
+            <p className="mt-1 text-base text-gray-900">
+              {customer.last_login_at 
+                ? new Date(customer.last_login_at).toLocaleDateString('en-GB', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })
+                : "-"
+              }
+            </p>
           </div>
+          
+          <div>
+            <label className="text-sm font-medium text-gray-500">Created Date</label>
+            <p className="mt-1 text-base text-gray-900">
+              {customer.created_at 
+                ? new Date(customer.created_at).toLocaleDateString('en-GB', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                  })
+                : "-"
+              }
+            </p>
+          </div>
+          
+          {customer.role && (
+            <div>
+              <label className="text-sm font-medium text-gray-500">Role</label>
+              <p className="mt-1 text-base text-gray-900 capitalize">{customer.role.name}</p>
+            </div>
+          )}
         </div>
       </div>
 

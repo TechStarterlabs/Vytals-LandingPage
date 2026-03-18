@@ -29,6 +29,7 @@ const COAView = lazy(() => import("@/pages/admin/COAView"))
 const COAForm = lazy(() => import("@/pages/admin/COAForm"))
 const COABulkUpload = lazy(() => import("@/pages/admin/COABulkUpload"))
 const ScanLogs = lazy(() => import("@/pages/admin/ScanLogs"))
+const ScanLogView = lazy(() => import("@/pages/admin/ScanLogView"))
 const IntegrationLogs = lazy(() => import("@/pages/admin/IntegrationLogs"))
 const IntegrationLogView = lazy(() => import("@/pages/admin/IntegrationLogView"))
 const Customers = lazy(() => import("@/pages/admin/Customers"))
@@ -184,7 +185,7 @@ function App() {
               <Route path="coa/:id" element={<COAView />} />
               <Route path="coa/:id/edit" element={<COAForm />} />
               <Route path="scan-logs" element={<ScanLogs />} />
-              <Route path="scan-logs/:id" element={<div>Scan Log View - Coming Soon</div>} />
+              <Route path="scan-logs/:id" element={<ScanLogView />} />
               <Route path="integration-logs" element={<IntegrationLogs />} />
               <Route path="integration-logs/:logId" element={<IntegrationLogView />} />
               <Route path="customers" element={<Customers />} />

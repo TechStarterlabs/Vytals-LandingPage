@@ -1,17 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
 
-const STORAGE_KEY = "spunge-verification-state-v1"
+const STORAGE_KEY = "vytals-user-preferences"
 
 const initialState = {
-  serialNumber: "",
-  batchId: "",
-  homeCompleted: false,
-  otpVerified: false,
-  emailVerified: false,
-  productData: null,
-  userData: null,
-  coaData: null,
+  // Only store user convenience data, not business logic
   customerToken: null,
+  // Keep these for form convenience only
+  lastMobile: "",
+  lastEmail: "",
 }
 
 const VerificationStoreContext = createContext(null)
@@ -33,56 +29,38 @@ export function VerificationStoreProvider({ children }) {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   }, [state])
 
-  const setSerialAndBatch = useCallback((serialNumber, batchId) => {
-    setState((prev) => ({ ...prev, serialNumber, batchId }))
-  }, [])
-
-  const setHomeCompleted = useCallback((completed) => {
-    setState((prev) => ({ ...prev, homeCompleted: completed }))
-  }, [])
-
-  const setOtpVerified = useCallback((verified) => {
-    setState((prev) => ({ ...prev, otpVerified: verified }))
-  }, [])
-
-  const setEmailVerified = useCallback((verified) => {
-    setState((prev) => ({ ...prev, emailVerified: verified }))
-  }, [])
-
-  const setProductData = useCallback((productData) => {
-    setState((prev) => ({ ...prev, productData }))
-  }, [])
-
-  const setUserData = useCallback((userData) => {
-    setState((prev) => ({ ...prev, userData }))
-  }, [])
-
-  const setCoaData = useCallback((coaData) => {
-    setState((prev) => ({ ...prev, coaData }))
-  }, [])
-
   const setCustomerToken = useCallback((token) => {
     setState((prev) => ({ ...prev, customerToken: token }))
+    // Also store in separate localStorage key for persistence
+    if (token) {
+      localStorage.setItem('vytals-user-token', token)
+    } else {
+      localStorage.removeItem('vytals-user-token')
+    }
   }, [])
 
-  const resetVerification = useCallback(() => {
+  const setLastMobile = useCallback((mobile) => {
+    setState((prev) => ({ ...prev, lastMobile: mobile }))
+  }, [])
+
+  const setLastEmail = useCallback((email) => {
+    setState((prev) => ({ ...prev, lastEmail: email }))
+  }, [])
+
+  const clearUserData = useCallback(() => {
     setState(initialState)
+    localStorage.removeItem('vytals-user-token')
   }, [])
 
   const value = useMemo(
     () => ({
       ...state,
-      setSerialAndBatch,
-      setHomeCompleted,
-      setOtpVerified,
-      setEmailVerified,
-      setProductData,
-      setUserData,
-      setCoaData,
       setCustomerToken,
-      resetVerification,
+      setLastMobile,
+      setLastEmail,
+      clearUserData,
     }),
-    [state, resetVerification, setCoaData, setCustomerToken, setEmailVerified, setHomeCompleted, setOtpVerified, setProductData, setSerialAndBatch, setUserData],
+    [state, setCustomerToken, setLastMobile, setLastEmail, clearUserData],
   )
 
   return <VerificationStoreContext.Provider value={value}>{children}</VerificationStoreContext.Provider>

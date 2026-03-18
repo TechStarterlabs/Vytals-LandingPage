@@ -33,9 +33,9 @@ export default function UserForm() {
   const fetchRoles = async () => {
     try {
       const response = await apiClient.get('/admin/roles')
-      // Filter to show only admin roles (exclude user/customer role)
+      // Filter to show only manager role (exclude superadmin and user/customer roles)
       const adminRoles = (response.data.roles || []).filter(
-        role => role.name !== 'user'
+        role => role.name === 'manager'
       )
       setRoles(adminRoles)
     } catch (error) {

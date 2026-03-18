@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Eye, Edit, Trash2, X } from "lucide-react"
+import { Eye, Edit, Trash2, X, RotateCcw } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { apiClient } from "@/lib/api"
@@ -13,6 +13,7 @@ export default function Users() {
   const [users, setUsers] = useState([])
   const [roles, setRoles] = useState([])
   const [loading, setLoading] = useState(true)
+  const [showDeleted, setShowDeleted] = useState(false)
   const { toast } = useToast()
   const navigate = useNavigate()
   const { confirm, isOpen, config, handleConfirm, handleCancel } = useConfirm()
@@ -20,11 +21,13 @@ export default function Users() {
 
   useEffect(() => {
     fetchUsers()
-  }, [])
+  }, [showDeleted])
 
   const fetchUsers = async () => {
     try {
-      const data = await apiClient.get('/admin/users')
+      const data = await apiClient.get('/admin/users', {
+        params: { include_deleted: showDeleted }
+      })
       setUsers(data.data.users)
     } catch (err) {
       console.error('Failed to fetch users:', err)
@@ -63,6 +66,33 @@ export default function Users() {
       toast({
         title: "Error",
         description: err.message,
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleRestore = async (userId) => {
+    const confirmed = await confirm({
+      title: "Restore User",
+      message: "Are you sure you want to restore this user?",
+      confirmText: "Restore",
+      cancelText: "Cancel"
+    })
+
+    if (!confirmed) return
+
+    try {
+      await apiClient.post(`/admin/users/${userId}/restore`)
+      toast({
+        title: "Success",
+        description: "User restored successfully!",
+        variant: "success",
+      })
+      fetchUsers()
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to restore user",
         variant: "destructive",
       })
     }
@@ -115,30 +145,47 @@ export default function Users() {
       header: "ACTIONS",
       cell: (row) => (
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => handleView(row)}
-            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-            title="View"
-          >
-            <Eye className="h-4 w-4 text-gray-600" />
-          </button>
-          {canUpdate('users') && (
-            <button
-              onClick={() => handleEdit(row)}
-              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Edit"
-            >
-              <Edit className="h-4 w-4 text-gray-600" />
-            </button>
-          )}
-          {canDelete('users') && (
-            <button
-              onClick={() => handleDelete(row.user_id)}
-              className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
-              title="Delete"
-            >
-              <Trash2 className="h-4 w-4 text-red-600" />
-            </button>
+          {!row.deleted_at ? (
+            <>
+              <button
+                onClick={() => handleView(row)}
+                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                title="View"
+              >
+                <Eye className="h-4 w-4 text-gray-600" />
+              </button>
+              {canUpdate('users') && (
+                <button
+                  onClick={() => handleEdit(row)}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Edit"
+                >
+                  <Edit className="h-4 w-4 text-gray-600" />
+                </button>
+              )}
+              {canDelete('users') && (
+                <button
+                  onClick={() => handleDelete(row.user_id)}
+                  className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Delete"
+                >
+                  <Trash2 className="h-4 w-4 text-red-600" />
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              {canDelete('users') && (
+                <button
+                  onClick={() => handleRestore(row.user_id)}
+                  className="p-1.5 hover:bg-green-50 rounded-lg transition-colors"
+                  title="Restore"
+                >
+                  <RotateCcw className="h-4 w-4 text-green-600" />
+                </button>
+              )}
+              <span className="text-xs text-red-600 font-medium">Deleted</span>
+            </>
           )}
         </div>
       )
@@ -169,6 +216,18 @@ export default function Users() {
         onAdd={canCreate('users') ? () => navigate('/admin/users/new') : undefined}
         addButtonText="Add User"
         exportFileName="admin-users"
+        customHeaderActions={canDelete('users') ? (
+          <button
+            onClick={() => setShowDeleted(!showDeleted)}
+            className={`px-4 py-2 rounded-lg border transition-colors ${
+              showDeleted 
+                ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100' 
+                : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            {showDeleted ? 'Hide Deleted' : 'Show Deleted'}
+          </button>
+        ) : undefined}
       />
     </div>
   )

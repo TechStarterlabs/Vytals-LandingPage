@@ -1,16 +1,47 @@
 import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router-dom"
+import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { authService } from "@/lib/auth"
 import { usePermissions } from "@/contexts/PermissionContext"
+import { getFirstAccessibleRoute } from "@/utils/permissions"
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 
 export default function AdminLogin() {
   const navigate = useNavigate()
   const { toast } = useToast()
-  const { refreshPermissions } = usePermissions()
+  const { refreshPermissions, hasPermission, isLoading } = usePermissions()
+  
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = authService.getToken()
+      const user = authService.getUser()
+      
+      if (token && user) {
+        // User is already logged in, redirect to appropriate page
+        try {
+          // Refresh permissions to ensure they're current
+          await refreshPermissions()
+          
+          // Get the first accessible route based on permissions
+          const firstRoute = getFirstAccessibleRoute(hasPermission)
+          navigate(firstRoute, { replace: true })
+        } catch (error) {
+          // If token is invalid, clear it and stay on login page
+          authService.removeToken()
+          authService.removeUser()
+        }
+      }
+    }
+    
+    // Only check auth if permissions are not loading
+    if (!isLoading) {
+      checkAuth()
+    }
+  }, [navigate, refreshPermissions, hasPermission, isLoading])
   
   const {
     register,
@@ -52,7 +83,10 @@ export default function AdminLogin() {
       
       // Refresh permissions and navigate
       await refreshPermissions()
-      navigate('/admin/dashboard')
+      
+      // Get the first accessible route based on permissions  
+      const firstRoute = getFirstAccessibleRoute(hasPermission)
+      navigate(firstRoute, { replace: true })
       
     } catch (err) {
       setError("root", {

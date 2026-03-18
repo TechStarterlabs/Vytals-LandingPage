@@ -97,7 +97,7 @@ export default function RoleView() {
     a.module_label.localeCompare(b.module_label)
   )
 
-  const canDelete = role.name !== 'superadmin' && role.name !== 'user'
+  const canDelete = role.name !== 'user'
   const canEdit = role.name !== 'user'
 
   return (
@@ -205,9 +205,7 @@ export default function RoleView() {
       {!canDelete && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <p className="text-sm text-yellow-800">
-            {role.name === 'superadmin' 
-              ? "The superadmin role cannot be deleted as it's a system role."
-              : "The user role cannot be deleted as it's the default customer role."}
+            The user role cannot be deleted as it's the default customer role.
           </p>
         </div>
       )}

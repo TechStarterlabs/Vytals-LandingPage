@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { ArrowLeft, Save } from "lucide-react"
@@ -12,6 +12,8 @@ export default function SerialForm() {
   const navigate = useNavigate()
   const { toast } = useToast()
   const isEdit = id && id !== 'new'
+  const [batches, setBatches] = useState([])
+  const [loadingBatches, setLoadingBatches] = useState(true)
   
   const {
     register,
@@ -27,23 +29,31 @@ export default function SerialForm() {
   })
 
   useEffect(() => {
+    fetchBatches()
     if (isEdit) {
       fetchSerial()
     }
   }, [id])
 
+  const fetchBatches = async () => {
+    try {
+      const response = await apiClient.get('/admin/batches?limit=100')
+      setBatches(response.data.batches || [])
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load batches",
+        variant: "destructive"
+      })
+    } finally {
+      setLoadingBatches(false)
+    }
+  }
+
   const fetchSerial = async () => {
     try {
-      // TODO: Replace with actual API call
-      // const data = await apiClient.get(`/admin/serials/${id}`)
-      // reset(data.data)
-      
-      // Mock data
-      reset({
-        serial_number: "SN123456789",
-        batch_id: "1",
-        status: "Available"
-      })
+      const response = await apiClient.get(`/admin/serials/${id}`)
+      reset(response.data)
     } catch (error) {
       toast({
         title: "Error",
@@ -55,15 +65,21 @@ export default function SerialForm() {
 
   const onSubmit = async (data) => {
     try {
+      // Convert batch_id to number
+      const formData = {
+        ...data,
+        batch_id: parseInt(data.batch_id)
+      }
+
       if (isEdit) {
-        // await apiClient.put(`/admin/serials/${id}`, data)
+        await apiClient.put(`/admin/serials/${id}`, formData)
         toast({
           title: "Success",
           description: "Serial number updated successfully",
           variant: "success"
         })
       } else {
-        // await apiClient.post('/admin/serials', data)
+        await apiClient.post('/admin/serials', formData)
         toast({
           title: "Success",
           description: "Serial number created successfully",
@@ -144,11 +160,16 @@ export default function SerialForm() {
                   className={`w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#11b5b2] focus:border-transparent ${
                     errors.batch_id ? 'border-red-500' : 'border-gray-300'
                   }`}
+                  disabled={loadingBatches}
                 >
-                  <option value="">Select Batch</option>
-                  <option value="1">BATCH001 - Product A</option>
-                  <option value="2">BATCH002 - Product B</option>
-                  <option value="3">BATCH003 - Product C</option>
+                  <option value="">
+                    {loadingBatches ? "Loading batches..." : "Select Batch"}
+                  </option>
+                  {batches.map((batch) => (
+                    <option key={batch.batch_id} value={batch.batch_id}>
+                      {batch.batch_code} - {batch.product?.name || 'Unknown Product'}
+                    </option>
+                  ))}
                 </select>
                 {errors.batch_id && (
                   <p className="mt-1 text-sm text-red-600">{errors.batch_id.message}</p>

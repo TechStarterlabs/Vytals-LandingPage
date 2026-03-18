@@ -135,13 +135,13 @@ export default function AdminSidebar() {
         { icon: UserCog, label: "Admin Users", path: "/admin/users", permission: "users.view" }
       ]
     },
-    {
-      type: 'single',
-      icon: Gift,
-      label: "Rewards",
-      path: "/admin/rewards",
-      permission: "rewards.view"
-    }
+    // {
+    //   type: 'single',
+    //   icon: Gift,
+    //   label: "Rewards",
+    //   path: "/admin/rewards",
+    //   permission: "rewards.view"
+    // }
   ]
 
   // Filter navigation based on permissions

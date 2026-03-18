@@ -21,10 +21,9 @@ export default function CustomerForm() {
     setValue
   } = useForm({
     defaultValues: {
-      name: "",
-      mobile: "",
+      mobile_number: "",
       email: "",
-      status: "Active"
+      is_active: true
     }
   })
 
@@ -36,16 +35,13 @@ export default function CustomerForm() {
 
   const fetchCustomer = async () => {
     try {
-      // TODO: Replace with actual API call
-      // const data = await apiClient.get(`/admin/customers/${id}`)
-      // reset(data.data)
+      const response = await apiClient.get(`/admin/users/${id}`)
+      const user = response.data.user
       
-      // Mock data
       reset({
-        name: "Akash Shetty",
-        mobile: "9987900884",
-        email: "shettykash20@gmail.com",
-        status: "Active"
+        mobile_number: user.mobile_number,
+        email: user.email || '',
+        is_active: user.is_active
       })
     } catch (error) {
       toast({
@@ -59,14 +55,22 @@ export default function CustomerForm() {
   const onSubmit = async (data) => {
     try {
       if (isEdit) {
-        // await apiClient.put(`/admin/customers/${id}`, data)
+        await apiClient.put(`/admin/users/${id}`, {
+          email: data.email,
+          is_active: data.is_active
+        })
         toast({
           title: "Success",
           description: "Customer updated successfully",
           variant: "success"
         })
       } else {
-        // await apiClient.post('/admin/customers', data)
+        await apiClient.post('/admin/users', {
+          mobile_number: data.mobile_number,
+          email: data.email,
+          role_id: null, // Customer role
+          is_active: data.is_active
+        })
         toast({
           title: "Success",
           description: "Customer created successfully",
@@ -115,46 +119,25 @@ export default function CustomerForm() {
           
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Name */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Name <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  {...register("name", {
-                    required: "Name is required",
-                    minLength: {
-                      value: 2,
-                      message: "Name must be at least 2 characters"
-                    }
-                  })}
-                  className={errors.name ? 'border-red-500' : 'border-gray-300'}
-                  placeholder="Enter customer name"
-                />
-                {errors.name && (
-                  <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-                )}
-              </div>
-
               {/* Mobile */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Mobile <span className="text-red-500">*</span>
                 </label>
                 <Input
-                  {...register("mobile", {
+                  {...register("mobile_number", {
                     required: "Mobile is required",
                     pattern: {
                       value: /^[0-9]{10}$/,
                       message: "Mobile must be 10 digits"
                     }
                   })}
-                  className={errors.mobile ? 'border-red-500' : 'border-gray-300'}
+                  className={errors.mobile_number ? 'border-red-500' : 'border-gray-300'}
                   placeholder="Enter mobile number"
                   disabled={isEdit}
                 />
-                {errors.mobile && (
-                  <p className="mt-1 text-sm text-red-600">{errors.mobile.message}</p>
+                {errors.mobile_number && (
+                  <p className="mt-1 text-sm text-red-600">{errors.mobile_number.message}</p>
                 )}
               </div>
 
@@ -185,14 +168,14 @@ export default function CustomerForm() {
                   Status <span className="text-red-500">*</span>
                 </label>
                 <select
-                  {...register("status", { required: "Status is required" })}
+                  {...register("is_active", { required: "Status is required" })}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#11b5b2] focus:border-transparent"
                 >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
+                  <option value={true}>Active</option>
+                  <option value={false}>Inactive</option>
                 </select>
-                {errors.status && (
-                  <p className="mt-1 text-sm text-red-600">{errors.status.message}</p>
+                {errors.is_active && (
+                  <p className="mt-1 text-sm text-red-600">{errors.is_active.message}</p>
                 )}
               </div>
             </div>

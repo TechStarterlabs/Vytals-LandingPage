@@ -11,14 +11,21 @@ export default function DataTable({
   addButtonText = "Add New",
   showAddButton = true,
   exportFileName = "data",
-  customActions
+  customActions,
+  customHeaderActions,
+  loading = false,
+  pagination = null // { currentPage, totalPages, onPageChange }
 }) {
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
 
-  // Filter data based on search
+  // Use server-side pagination if provided, otherwise use client-side
+  const isServerPagination = pagination !== null
+  
+  // Filter data based on search (only for client-side pagination)
   const filteredData = useMemo(() => {
+    if (isServerPagination) return data // Don't filter on client if server-side
     if (!searchTerm) return data
     
     return data.filter(row => 
@@ -26,13 +33,23 @@ export default function DataTable({
         String(value).toLowerCase().includes(searchTerm.toLowerCase())
       )
     )
-  }, [data, searchTerm])
+  }, [data, searchTerm, isServerPagination])
 
-  // Pagination
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
+  // Pagination (client-side)
+  const totalPages = isServerPagination ? pagination.totalPages : Math.ceil(filteredData.length / itemsPerPage)
+  const activePage = isServerPagination ? pagination.currentPage : currentPage
+  const startIndex = (activePage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
-  const currentData = filteredData.slice(startIndex, endIndex)
+  const currentData = isServerPagination ? data : filteredData.slice(startIndex, endIndex)
+  const totalRecords = isServerPagination ? pagination.totalRecords || data.length : filteredData.length
+
+  const handlePageChange = (newPage) => {
+    if (isServerPagination) {
+      pagination.onPageChange(newPage)
+    } else {
+      setCurrentPage(newPage)
+    }
+  }
 
   // Export to CSV
   const exportToCSV = () => {
@@ -90,6 +107,11 @@ export default function DataTable({
         </div>
         
         <div className="flex items-center gap-2">
+          {customHeaderActions && (
+            <div className="mr-2">
+              {customHeaderActions}
+            </div>
+          )}
           <button
             onClick={exportToCSV}
             className="px-3 py-1.5 border border-gray-300 rounded-md hover:bg-gray-50 shadow-sm flex items-center gap-2 text-sm"
@@ -117,7 +139,15 @@ export default function DataTable({
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {currentData.length > 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={columns.length} className="px-6 py-8 text-center">
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#338291]"></div>
+                    </div>
+                  </td>
+                </tr>
+              ) : currentData.length > 0 ? (
                 currentData.map((row, rowIndex) => (
                   <tr 
                     key={rowIndex} 
@@ -165,14 +195,14 @@ export default function DataTable({
             </div>
             
             <div className="text-sm text-gray-700">
-              Showing {filteredData.length > 0 ? startIndex + 1 : 0} to {Math.min(endIndex, filteredData.length)} of {filteredData.length} entries
+              Showing {totalRecords > 0 ? startIndex + 1 : 0} to {Math.min(endIndex, totalRecords)} of {totalRecords} entries
             </div>
           </div>
           
           <div className="flex items-center justify-center gap-2">
             <button
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
+              onClick={() => handlePageChange(Math.max(1, activePage - 1))}
+              disabled={activePage === 1}
               className="px-3 py-1.5 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             >
               Previous
@@ -183,20 +213,20 @@ export default function DataTable({
                 let pageNum
                 if (totalPages <= 5) {
                   pageNum = i + 1
-                } else if (currentPage <= 3) {
+                } else if (activePage <= 3) {
                   pageNum = i + 1
-                } else if (currentPage >= totalPages - 2) {
+                } else if (activePage >= totalPages - 2) {
                   pageNum = totalPages - 4 + i
                 } else {
-                  pageNum = currentPage - 2 + i
+                  pageNum = activePage - 2 + i
                 }
                 
                 return (
                   <button
                     key={i}
-                    onClick={() => setCurrentPage(pageNum)}
+                    onClick={() => handlePageChange(pageNum)}
                     className={`px-3 py-1 text-sm rounded ${
-                      currentPage === pageNum
+                      activePage === pageNum
                         ? "bg-[#338291] text-white"
                         : "text-gray-700 hover:bg-gray-100 border border-gray-300"
                     }`}
@@ -208,8 +238,8 @@ export default function DataTable({
             </div>
             
             <button
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
+              onClick={() => handlePageChange(Math.min(totalPages, activePage + 1))}
+              disabled={activePage === totalPages}
               className="px-3 py-1.5 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             >
               Next

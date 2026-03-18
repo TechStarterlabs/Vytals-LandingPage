@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Eye, Edit, Trash2, Upload } from "lucide-react"
+import { Eye, Edit, Trash2, Upload, RotateCcw } from "lucide-react"
 import DataTable from "@/components/DataTable"
 import ConfirmDialog from "@/components/ConfirmDialog"
 import { apiClient } from "@/lib/api"
@@ -7,10 +7,12 @@ import { useToast } from "@/hooks/use-toast"
 import { useNavigate } from "react-router-dom"
 import { useConfirm } from "@/hooks/use-confirm"
 import { usePermissions } from "@/contexts/PermissionContext"
+import PermissionRoute from "@/components/PermissionRoute"
 
 export default function COA() {
   const [coas, setCoas] = useState([])
   const [loading, setLoading] = useState(true)
+  const [showDeleted, setShowDeleted] = useState(false)
   const { toast } = useToast()
   const navigate = useNavigate()
   const { confirm, isOpen, config, handleConfirm, handleCancel } = useConfirm()
@@ -18,11 +20,13 @@ export default function COA() {
 
   useEffect(() => {
     fetchCOAs()
-  }, [])
+  }, [showDeleted])
 
   const fetchCOAs = async () => {
     try {
-      const response = await apiClient.get('/admin/coa')
+      const response = await apiClient.get('/admin/coa', {
+        params: { include_deleted: showDeleted }
+      })
       setCoas(response.data.coas || [])
     } catch (error) {
       console.error('Failed to fetch COAs:', error)
@@ -66,6 +70,33 @@ export default function COA() {
       toast({
         title: "Error",
         description: error.message || "Failed to delete COA",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleRestore = async (coaId) => {
+    const confirmed = await confirm({
+      title: "Restore COA",
+      message: "Are you sure you want to restore this COA?",
+      confirmText: "Restore",
+      cancelText: "Cancel"
+    })
+    
+    if (!confirmed) return
+    
+    try {
+      await apiClient.post(`/admin/coa/${coaId}/restore`)
+      toast({
+        title: "Success",
+        description: "COA restored successfully",
+        variant: "success"
+      })
+      fetchCOAs()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to restore COA",
         variant: "destructive"
       })
     }
@@ -126,30 +157,47 @@ export default function COA() {
       header: "ACTIONS",
       cell: (row) => (
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => handleView(row)}
-            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-            title="View"
-          >
-            <Eye className="h-4 w-4 text-gray-600" />
-          </button>
-          {canUpdate('coa') && (
-            <button
-              onClick={() => handleEdit(row)}
-              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Edit"
-            >
-              <Edit className="h-4 w-4 text-gray-600" />
-            </button>
-          )}
-          {canDelete('coa') && (
-            <button
-              onClick={() => handleDelete(row.coa_id)}
-              className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
-              title="Delete"
-            >
-              <Trash2 className="h-4 w-4 text-red-600" />
-            </button>
+          {!row.deleted_at ? (
+            <>
+              <button
+                onClick={() => handleView(row)}
+                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                title="View"
+              >
+                <Eye className="h-4 w-4 text-gray-600" />
+              </button>
+              {canUpdate('coa') && (
+                <button
+                  onClick={() => handleEdit(row)}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Edit"
+                >
+                  <Edit className="h-4 w-4 text-gray-600" />
+                </button>
+              )}
+              {canDelete('coa') && (
+                <button
+                  onClick={() => handleDelete(row.coa_id)}
+                  className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Delete"
+                >
+                  <Trash2 className="h-4 w-4 text-red-600" />
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              {canDelete('coa') && (
+                <button
+                  onClick={() => handleRestore(row.coa_id)}
+                  className="p-1.5 hover:bg-green-50 rounded-lg transition-colors"
+                  title="Restore"
+                >
+                  <RotateCcw className="h-4 w-4 text-green-600" />
+                </button>
+              )}
+              <span className="text-xs text-red-600 font-medium">Deleted</span>
+            </>
           )}
         </div>
       )
