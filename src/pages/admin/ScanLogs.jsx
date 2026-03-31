@@ -88,7 +88,8 @@ export default function ScanLogs() {
       SUCCESS: { bg: "bg-green-100", text: "text-green-800" },
       FAILED: { bg: "bg-red-100", text: "text-red-800" },
       DUPLICATE: { bg: "bg-yellow-100", text: "text-yellow-800" },
-      EXPIRED: { bg: "bg-gray-100", text: "text-gray-800" }
+      EXPIRED: { bg: "bg-gray-100", text: "text-gray-800" },
+      COA_UNLOCKED: { bg: "bg-teal-100", text: "text-teal-800" }
     }
     
     const config = statusConfig[status] || statusConfig.FAILED
@@ -101,12 +102,12 @@ export default function ScanLogs() {
   }
 
   const getScanTypeBadge = (scanType) => {
-    const isQR = scanType === "QR"
+    const config = scanType === "QR"
+      ? { bg: "bg-blue-100", text: "text-blue-800" }
+      : { bg: "bg-purple-100", text: "text-purple-800" }
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-        isQR ? "bg-blue-100 text-blue-800" : "bg-purple-100 text-purple-800"
-      }`}>
-        {scanType}
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
+        {scanType === "QR" ? "QR Code" : "Batch"}
       </span>
     )
   }
@@ -128,6 +129,11 @@ export default function ScanLogs() {
       header: "CUSTOMER",
       cell: (row) => (
         <div>
+          {(row.user?.first_name || row.user?.last_name) && (
+            <div className="text-sm font-medium text-gray-900">
+              {[row.user.first_name, row.user.last_name].filter(Boolean).join(" ")}
+            </div>
+          )}
           <div className="text-sm text-gray-500 font-mono">
             {row.user?.mobile_number || "N/A"}
           </div>
@@ -212,7 +218,7 @@ export default function ScanLogs() {
             >
               <option value="">All Types</option>
               <option value="QR">QR Code</option>
-              <option value="MANUAL">Manual Entry</option>
+              <option value="BATCH">Batch</option>
             </select>
           </div>
           

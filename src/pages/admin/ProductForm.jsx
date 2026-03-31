@@ -29,7 +29,8 @@ export default function ProductForm() {
       product_code: "",
       name: "",
       pack_type: "",
-      pack_size: ""
+      pack_size: "",
+      slug: ""
     }
   })
 
@@ -46,7 +47,8 @@ export default function ProductForm() {
         product_code: response.data.product_code || "",
         name: response.data.name || "",
         pack_type: response.data.pack_type || "",
-        pack_size: response.data.pack_size || ""
+        pack_size: response.data.pack_size || "",
+        slug: response.data.slug || ""
       })
     } catch (error) {
       toast({
@@ -219,6 +221,30 @@ export default function ProductForm() {
                 )}
                 <p className="mt-1 text-xs text-gray-500">
                   e.g., "60 capsules", "90 tablets", "500ml"
+                </p>
+              </div>
+
+              {/* Slug */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Slug
+                </label>
+                <Input
+                  {...register("slug", {
+                    pattern: {
+                      value: /^[a-z0-9-]+$/,
+                      message: "Slug must be URL-safe (lowercase letters, numbers, hyphens only)"
+                    }
+                  })}
+                  type="text"
+                  className={errors.slug ? 'border-red-500' : 'border-gray-300'}
+                  placeholder="premium-omega-3"
+                />
+                {errors.slug && (
+                  <p className="mt-1 text-sm text-red-600">{errors.slug.message}</p>
+                )}
+                <p className="mt-1 text-xs text-gray-500">
+                  URL-safe identifier (lowercase letters, numbers, hyphens only). Used for the manual batch verification URL.
                 </p>
               </div>
             </div>

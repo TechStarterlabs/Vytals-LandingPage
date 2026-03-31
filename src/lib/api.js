@@ -84,12 +84,11 @@ class ApiClient {
     const requestOptions = {
       method: 'POST',
       body: JSON.stringify(data),
+      ...(options.headers && { headers: options.headers }),
     }
-    // Only pass customToken if it was explicitly provided
     if (options.hasOwnProperty('customToken')) {
       requestOptions.customToken = options.customToken
     }
-    
     return this.request(endpoint, requestOptions)
   }
 
@@ -121,6 +120,26 @@ export const apiClient = new ApiClient()
 
 // Verification API Service (Public - No Auth Required)
 export const verificationApi = {
+  // Get public products list (products with slugs)
+  async getProducts() {
+    return apiClient.get('/verify/products', { customToken: null })
+  },
+
+  // Verify batch (Batch_Flow) with batch_code and product_slug
+  async verifyBatch(batchCode, productSlug, sessionId = null) {
+    const userToken = localStorage.getItem('vytals-user-token')
+    const headers = {}
+    if (userToken) headers['Authorization'] = `Bearer ${userToken}`
+    if (sessionId) headers['X-Session-Id'] = sessionId
+
+    return apiClient.request('/verify/batch', {
+      method: 'POST',
+      body: JSON.stringify({ batch_code: batchCode, product_slug: productSlug }),
+      headers,
+      customToken: userToken || null,
+    })
+  },
+
   // Verify product with serial number only
   async verifyProduct(serialNumber) {
     // Get user token from localStorage if available
@@ -135,20 +154,28 @@ export const verificationApi = {
   },
 
   // Send OTP for verification
-  async sendOTP(mobileNumber, serialNumber) {
-    return apiClient.post('/auth/send-otp', { 
-      mobile_number: mobileNumber, 
-      serial_number: serialNumber 
-    })
+  async sendOTP(mobileNumber, serialNumber, batchCode = null) {
+    const body = { mobile_number: mobileNumber }
+    if (batchCode) {
+      body.batch_code = batchCode
+    } else {
+      body.serial_number = serialNumber
+    }
+    return apiClient.post('/auth/send-otp', body)
   },
 
   // Verify OTP and complete verification
-  async verifyOTP(mobileNumber, otp, serialNumber) {
-    return apiClient.post('/auth/verify-otp', { 
-      mobile_number: mobileNumber, 
-      otp, 
-      serial_number: serialNumber 
-    })
+  async verifyOTP(mobileNumber, otp, serialNumber, firstName, lastName, batchCode = null, sessionId = null) {
+    const body = {
+      mobile_number: mobileNumber,
+      otp,
+      ...(batchCode ? { batch_code: batchCode } : { serial_number: serialNumber }),
+      ...(firstName && { first_name: firstName }),
+      ...(lastName && { last_name: lastName }),
+    }
+    const headers = {}
+    if (sessionId) headers['X-Session-Id'] = sessionId
+    return apiClient.post('/auth/verify-otp', body, { headers })
   },
 
   // Get COA for batch (requires customer token from verify-otp)
@@ -177,6 +204,13 @@ export const userApi = {
   // Get scan history
   async getScans(page = 1, limit = 10) {
     return apiClient.get(`/user/scans?page=${page}&limit=${limit}`)
+  }
+}
+
+// Admin Shopify API
+export const shopifyApi = {
+  async getCustomerOrders(customerId) {
+    return apiClient.get(`/admin/customers/${customerId}/shopify-orders`)
   }
 }
 

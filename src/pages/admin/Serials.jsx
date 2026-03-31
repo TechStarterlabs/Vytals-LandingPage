@@ -164,7 +164,9 @@ export default function Serials() {
         if (!row.verified_by) return '-'
         return (
           <div>
-            <p className="text-sm text-gray-900">{row.verified_by.name || '-'}</p>
+            <p className="text-sm text-gray-900">
+              {[row.verified_by.first_name, row.verified_by.last_name].filter(Boolean).join(" ") || row.verified_by.mobile_number || '-'}
+            </p>
             <p className="text-xs text-gray-500">{row.verified_by.mobile_number || '-'}</p>
           </div>
         )

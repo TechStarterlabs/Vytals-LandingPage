@@ -36,7 +36,8 @@ export default function ScanLogView() {
       SUCCESS: { bg: "bg-green-100", text: "text-green-800", icon: CheckCircle },
       FAILED: { bg: "bg-red-100", text: "text-red-800", icon: XCircle },
       DUPLICATE: { bg: "bg-yellow-100", text: "text-yellow-800", icon: AlertCircle },
-      EXPIRED: { bg: "bg-gray-100", text: "text-gray-800", icon: Clock }
+      EXPIRED: { bg: "bg-gray-100", text: "text-gray-800", icon: Clock },
+      COA_UNLOCKED: { bg: "bg-teal-100", text: "text-teal-800", icon: CheckCircle }
     }
     
     const config = statusConfig[status] || statusConfig.FAILED
@@ -156,6 +157,13 @@ export default function ScanLogView() {
           </div>
           
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="text-sm font-medium text-gray-500">Name</label>
+              <p className="mt-1 text-base text-gray-900">
+                {[scanLog.user.first_name, scanLog.user.last_name].filter(Boolean).join(" ") || "N/A"}
+              </p>
+            </div>
+
             <div>
               <label className="text-sm font-medium text-gray-500">Customer Email</label>
               <p className="mt-1 text-base text-gray-900">{scanLog.user.email || "N/A"}</p>

@@ -188,7 +188,9 @@ export default function SerialView() {
             <>
               <div>
                 <label className="text-sm font-medium text-gray-500">Verified By</label>
-                <p className="mt-1 text-base text-gray-900">{serial.verified_by.name || "N/A"}</p>
+                <p className="mt-1 text-base text-gray-900">
+                  {[serial.verified_by.first_name, serial.verified_by.last_name].filter(Boolean).join(" ") || serial.verified_by.mobile_number || "N/A"}
+                </p>
               </div>
               
               <div>

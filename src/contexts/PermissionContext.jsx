@@ -3,7 +3,7 @@ import { authService } from "@/lib/auth"
 
 const PermissionContext = createContext()
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'
 
 export function PermissionProvider({ children }) {
   const [permissions, setPermissions] = useState([])

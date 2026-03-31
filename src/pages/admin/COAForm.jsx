@@ -19,12 +19,15 @@ export default function COAForm() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-    reset
+    reset,
+    setError,
+    clearErrors
   } = useForm({
     defaultValues: {
       batch_id: "",
       file_url: "",
-      issue_date: ""
+      issue_date: "",
+      coa_data: ""
     }
   })
 
@@ -65,7 +68,8 @@ export default function COAForm() {
       reset({
         batch_id: batchId ? String(batchId) : "",
         file_url: coaData.file_url || "",
-        issue_date: coaData.issue_date ? coaData.issue_date.split('T')[0] : ""
+        issue_date: coaData.issue_date ? coaData.issue_date.split('T')[0] : "",
+        coa_data: coaData.coa_data ? JSON.stringify(coaData.coa_data, null, 2) : ""
       })
     } catch (error) {
       toast({
@@ -81,9 +85,20 @@ export default function COAForm() {
 
   const onSubmit = async (data) => {
     try {
+      let parsedCoaData = null
+      if (data.coa_data && data.coa_data.trim()) {
+        try {
+          parsedCoaData = JSON.parse(data.coa_data)
+        } catch {
+          setError("coa_data", { type: "manual", message: "coa_data must be valid JSON" })
+          return
+        }
+      }
+
       const payload = {
         ...data,
-        batch_id: parseInt(data.batch_id, 10)
+        batch_id: parseInt(data.batch_id, 10),
+        coa_data: parsedCoaData
       }
 
       if (isEdit) {
@@ -218,6 +233,27 @@ export default function COAForm() {
                 )}
                 <p className="mt-1 text-xs text-gray-500">
                   Optional: Enter the URL where the COA file is hosted
+                </p>
+              </div>
+
+              {/* COA Data */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  COA Data (JSON)
+                </label>
+                <textarea
+                  {...register("coa_data")}
+                  rows={8}
+                  className={`w-full border rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#11b5b2] focus:border-transparent resize-y ${
+                    errors.coa_data ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder={'{\n  "header": {\n    "product_name": "Omega-3 Softgel 1000mg",\n    "document_no": "GEN/QC/25-26/001",\n    "effective_date": "10/25/2026",\n    "issue_date": "10/25/2026"\n  },\n  "meta": [\n    { "label": "Unique Product ID", "value": "BCH2025-001-00001" },\n    { "label": "Manufactured By", "value": "Maxcure India Pvt. Ltd." }\n  ],\n  "sections": [\n    {\n      "title": "Analytical Tests",\n      "columns": ["Parameter", "Specification", "Result", "Method Ref."],\n      "rows": [\n        ["Moisture Content", "< 5.0%", "3.40%", "Karl Fischer"]\n      ]\n    }\n  ]\n}'}
+                />
+                {errors.coa_data && (
+                  <p className="mt-1 text-sm text-red-600">{errors.coa_data.message}</p>
+                )}
+                <p className="mt-1 text-xs text-gray-500">
+                  Optional: Enter structured COA metrics as a JSON object. This will be rendered dynamically on the verification page.
                 </p>
               </div>
             </div>

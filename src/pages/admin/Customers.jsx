@@ -110,12 +110,16 @@ export default function Customers() {
       cell: (row, index) => index + 1
     },
     {
-      header: "MOBILE",
-      cell: (row) => row.mobile_number
+      header: "FIRST NAME",
+      cell: (row) => row.first_name || "-"
     },
     {
-      header: "EMAIL",
-      cell: (row) => row.email || "-"
+      header: "LAST NAME",
+      cell: (row) => row.last_name || "-"
+    },
+    {
+      header: "MOBILE",
+      cell: (row) => row.mobile_number
     },
     {
       header: "POINTS",
@@ -137,7 +141,7 @@ export default function Customers() {
       header: "STATUS",
       cell: (row) => (
         <div className="flex flex-col gap-1">
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs ${
+          <span className={`inline-flex w-fit items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
             row.is_active 
               ? "bg-green-100 text-green-800" 
               : "bg-red-100 text-red-800"
@@ -145,12 +149,23 @@ export default function Customers() {
             {row.is_active ? "Active" : "Inactive"}
           </span>
           {row.deleted_at && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-gray-100 text-gray-800">
+            <span className="inline-flex w-fit items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
               Deleted
             </span>
           )}
         </div>
       )
+    },
+    {
+      header: "SHOPIFY",
+      cell: (row) => {
+        if (row.is_shopify_customer === null || row.is_shopify_customer === undefined) {
+          return <span className="text-xs text-gray-400">—</span>
+        }
+        return row.is_shopify_customer
+          ? <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Yes</span>
+          : <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">No</span>
+      }
     },
     {
       header: "LAST LOGIN",

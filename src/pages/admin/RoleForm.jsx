@@ -71,7 +71,6 @@ export default function RoleForm() {
     // Validation
     const newErrors = {}
     if (!formData.name.trim()) newErrors.name = 'Role name is required'
-    if (formData.permission_ids.length === 0) newErrors.permissions = 'At least one permission is required'
     
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)

@@ -105,7 +105,7 @@ export default function Users() {
     },
     {
       header: "NAME",
-      cell: (row) => row.name || "-"
+      cell: (row) => [row.first_name, row.last_name].filter(Boolean).join(" ") || "-"
     },
     {
       header: "EMAIL",

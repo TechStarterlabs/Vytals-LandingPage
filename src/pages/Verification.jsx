@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, lazy, Suspense } from "react"
-import { useSearchParams } from "react-router-dom"
+import { useEffect, useRef, useState, useMemo, lazy, Suspense } from "react"
+import { useSearchParams, useParams } from "react-router-dom"
 import { gsap } from "gsap"
 
 import { useVerificationStore } from "@/lib/verification-store"
@@ -7,6 +7,7 @@ import { verificationApi } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import VerificationSkeleton from "@/components/skeletons/VerificationSkeleton"
 
 // Lazy load heavy components
 const HeroBackground = lazy(() => import("@/components/HeroBackground"))
@@ -15,32 +16,102 @@ const CoachSection = lazy(() => import("@/components/CoachSection"))
 const DiscountSection = lazy(() => import("@/components/DiscountSection"))
 
 const DUMMY_COA = {
-  productName: "Trial Product",
-  labName: "Business Central ERP",
-  reportDate: "2024-11-07",
   status: "Approved",
-  packId: "VSR000000001",
-  testParameters: [
-    { label: "Purity", value: "99.2%" },
-    { label: "Heavy Metals", value: "< 5 ppm" },
-    { label: "Moisture", value: "0.3%" },
-    { label: "pH Value", value: "7.2" },
-    { label: "Microbial Count", value: "< 100 CFU/g" },
-  ],
 }
 
-const METRIC_TARGETS = {
-  purity: 99.2,
-  heavyMetals: 5,
-  moisture: 0.3,
-  ph: 7.2,
-  microbial: 100,
-}
+function CertificateRenderer({ data }) {
+  if (!data || typeof data !== 'object') return null
 
-const INGREDIENT_TARGETS = {
-  botanicalBlend: 68,
-  activeCompound: 24,
-  bioavailability: 93,
+  // Structured COA format
+  const { header, meta, sections } = data
+
+  // Fallback: if it's a flat key-value object (legacy), render as simple grid
+  if (!header && !sections) {
+    return (
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        {Object.entries(data).map(([key, value]) => {
+          if (typeof value === 'object' && value !== null) return null
+          return (
+            <div key={key} className="coa-reveal rounded-xl border border-[#E8ECE8] bg-[#F7F8F5] px-4 py-3">
+              <p className="text-sm text-[var(--muted)] capitalize">{key.replace(/_/g, ' ')}</p>
+              <p className="text-base font-bold text-[#111111]">{String(value)}</p>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  return (
+    <div className="coa-reveal mt-2 space-y-6">
+      {/* Header table */}
+      {header && (
+        <div className="overflow-x-auto rounded-xl border border-[#E8ECE8]">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-[#338291] text-white">
+                {Object.keys(header).map(k => (
+                  <th key={k} className="px-4 py-3 text-left font-semibold capitalize whitespace-nowrap">
+                    {k.replace(/_/g, ' ')}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="bg-[#F7F8F5]">
+                {Object.values(header).map((v, i) => (
+                  <td key={i} className="px-4 py-3 text-[#111111]">{v}</td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Meta key-value rows */}
+      {meta && meta.length > 0 && (
+        <div className="rounded-xl border border-[#E8ECE8] overflow-hidden">
+          {meta.map((row, i) => (
+            <div key={i} className={`flex gap-4 px-4 py-2.5 text-sm ${i % 2 === 0 ? 'bg-white' : 'bg-[#F7F8F5]'}`}>
+              <span className="w-48 shrink-0 font-semibold text-[#111111]">{row.label}</span>
+              <span className="text-[#444]">{row.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Sections (tables) */}
+      {sections && sections.map((section, si) => (
+        <div key={si} className="space-y-2">
+          {section.title && (
+            <h4 className="text-base font-bold text-[#111111]">{section.title}</h4>
+          )}
+          <div className="overflow-x-auto rounded-xl border border-[#E8ECE8]">
+            <table className="w-full text-sm">
+              {section.columns && (
+                <thead>
+                  <tr className="bg-[#338291] text-white">
+                    {section.columns.map((col, ci) => (
+                      <th key={ci} className="px-4 py-3 text-left font-semibold whitespace-nowrap">{col}</th>
+                    ))}
+                  </tr>
+                </thead>
+              )}
+              <tbody>
+                {section.rows && section.rows.map((row, ri) => (
+                  <tr key={ri} className={ri % 2 === 0 ? 'bg-white' : 'bg-[#F7F8F5]'}>
+                    {row.map((cell, ci) => (
+                      <td key={ci} className={`px-4 py-2.5 text-[#111111] ${ci === 0 ? 'font-medium' : ''}`}>{cell}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 function getFallbackBatch(serial) {
@@ -51,6 +122,7 @@ function getFallbackBatch(serial) {
 
 export default function Verification() {
   const [searchParams] = useSearchParams()
+  const { productSlug } = useParams()
   const {
     customerToken,
     lastMobile,
@@ -61,9 +133,14 @@ export default function Verification() {
   } = useVerificationStore()
   const { toast } = useToast()
 
+  // Stable session ID for this page load — used to dedup batch scan logs server-side
+  const sessionId = useMemo(() => crypto.randomUUID(), [])
+
   // All verification state is now local - not stored
   const [batchId, setBatchId] = useState("[BATCH-XXXXX]")
   const [serialNumber, setSerialNumber] = useState("[SN-XXXXXXXX]")
+  const [isBatchFlow, setIsBatchFlow] = useState(false)
+  const [isVerifying, setIsVerifying] = useState(true)
   const [isValidSerial, setIsValidSerial] = useState(true)
   const [productData, setProductData] = useState(null)
   const [userData, setUserData] = useState(null)
@@ -72,6 +149,8 @@ export default function Verification() {
   const [emailVerified, setEmailVerified] = useState(false)
   
   // Form state
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
   const [mobile, setMobile] = useState(lastMobile || "")
   const [otp, setOtp] = useState("")
   const [isOtpSent, setIsOtpSent] = useState(false)
@@ -84,21 +163,10 @@ export default function Verification() {
   const [emailSent, setEmailSent] = useState(false)
   const [emailError, setEmailError] = useState("")
   const [isSendingEmail, setIsSendingEmail] = useState(false)
-  const [metricValues, setMetricValues] = useState({
-    purity: 0,
-    heavyMetals: 0,
-    moisture: 0,
-    ph: 0,
-    microbial: 0,
-  })
-  const [ingredientValues, setIngredientValues] = useState({
-    botanicalBlend: 0,
-    activeCompound: 0,
-    bioavailability: 0,
-  })
 
   const coaSectionRef = useRef(null)
   const lockOverlayRef = useRef(null)
+  const verifyCalledRef = useRef(false)
 
   const verifyProductInitially = async (serial) => {
     try {
@@ -107,8 +175,7 @@ export default function Verification() {
       console.log('User token exists:', !!localStorage.getItem('vytals-user-token'))
       
       const response = await verificationApi.verifyProduct(serial)
-      console.log('API Response:', response.data)
-      
+      console.log('API Response:', response.data)      
       if (response.success) {
         const data = response.data
         
@@ -168,10 +235,77 @@ export default function Verification() {
         description: error.message || "This serial number is not valid or does not exist in our system.",
         variant: "destructive",
       })
+    } finally {
+      setIsVerifying(false)
+    }
+  }
+
+  const verifyBatchInitially = async (batchCode, slug) => {
+    try {
+      console.log('=== BATCH VERIFICATION API CALL ===')
+      console.log('Batch Code:', batchCode)
+      console.log('Product Slug:', slug)
+
+      const response = await verificationApi.verifyBatch(batchCode, slug, sessionId)
+      console.log('Batch API Response:', response.data)
+
+      if (response.success) {
+        const data = response.data
+
+        setIsValidSerial(true)
+
+        if (data.user_has_verified && data.coa_data) {
+          console.log('✅ User has verified this batch, unlocking COA')
+          setCoaData(data.coa_data)
+          setOtpVerified(true)
+          setIsUnlocked(true)
+
+          if (data.user_data) {
+            setUserData(data.user_data)
+          }
+
+          if (data.points_awarded > 0) {
+            toast({
+              title: "Success",
+              description: `Product verified! ${data.points_awarded} points awarded.`,
+              variant: "success",
+            })
+          }
+
+          setProductData({
+            product: data.product,
+            batch: data.batch,
+            isScanned: data.is_scanned,
+            isCoaUnlocked: data.is_coa_unlocked,
+          })
+        } else {
+          console.log('🔒 Batch verification successful, but requires OTP')
+          setProductData({
+            product: data.product,
+            batch: data.batch,
+            isScanned: data.is_scanned,
+            isCoaUnlocked: data.is_coa_unlocked,
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Batch Verification API error:', error)
+      setIsValidSerial(false)
+      setProductData(null)
+      toast({
+        title: "Invalid Batch",
+        description: error.message || "This batch code is not valid or does not exist in our system.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsVerifying(false)
     }
   }
 
   useEffect(() => {
+    if (verifyCalledRef.current) return
+    verifyCalledRef.current = true
+
     const encoded = searchParams.get("ref") || ""
     
     // If no ref parameter, mark as invalid
@@ -179,32 +313,44 @@ export default function Verification() {
       setIsValidSerial(false)
       setSerialNumber("No serial number provided")
       setBatchId("")
+      setIsVerifying(false)
       return
     }
     
     try {
       const decoded = JSON.parse(atob(decodeURIComponent(encoded)))
-      const nextSerial = decoded?.s
-      const nextBatch = decoded?.b || (decoded?.s ? getFallbackBatch(decoded.s) : null)
-      
-      // Only proceed if we have a valid serial number
-      if (!nextSerial) {
-        throw new Error('Invalid serial number')
-      }
-      
-      setSerialNumber(nextSerial)
-      if (nextBatch) setBatchId(nextBatch)
-      setIsValidSerial(true)
+      const isBatchFlow = decoded?.b !== undefined && decoded?.s === undefined
 
-      // Always verify the product with the backend
-      verifyProductInitially(nextSerial)
+      if (isBatchFlow) {
+        // Batch_Flow: payload has `b` but no `s`
+        const batchCode = decoded.b
+        if (!batchCode) throw new Error('Missing batch code')
+
+        setBatchId(batchCode)
+        setSerialNumber("Batch Entry")
+        setIsValidSerial(true)
+        setIsBatchFlow(true)
+
+        verifyBatchInitially(batchCode, productSlug)
+      } else {
+        // QR_Flow: payload has `s` (serial number)
+        const nextSerial = decoded?.s
+        const nextBatch = decoded?.b || (decoded?.s ? getFallbackBatch(decoded.s) : null)
+
+        if (!nextSerial) throw new Error('Invalid serial number')
+
+        setSerialNumber(nextSerial)
+        if (nextBatch) setBatchId(nextBatch)
+        setIsValidSerial(true)
+
+        verifyProductInitially(nextSerial)
+      }
     } catch (error) {
-      // Invalid ref payload - mark as invalid
       console.error('Invalid verification URL:', error)
       setIsValidSerial(false)
       setSerialNumber("Invalid verification link")
       setBatchId("")
-      
+      setIsVerifying(false)
       toast({
         title: "Invalid URL",
         description: "The verification link is invalid. Please scan the QR code again.",
@@ -232,43 +378,13 @@ export default function Verification() {
   useEffect(() => {
     if (!isUnlocked || !coaSectionRef.current) return
 
-    // Simplified animation - just reveal, no complex counters
+    // Reveal animation
     const elements = document.querySelectorAll(".coa-reveal")
     if (elements.length > 0) {
       gsap.fromTo(
         elements,
         { opacity: 0, y: 15 },
         { opacity: 1, y: 0, duration: 0.3, ease: "power2.out", stagger: 0.03 }
-      )
-    }
-
-    // Set final values immediately
-    setMetricValues({
-      purity: METRIC_TARGETS.purity,
-      heavyMetals: METRIC_TARGETS.heavyMetals,
-      moisture: METRIC_TARGETS.moisture,
-      ph: METRIC_TARGETS.ph,
-      microbial: METRIC_TARGETS.microbial,
-    })
-
-    setIngredientValues({
-      botanicalBlend: INGREDIENT_TARGETS.botanicalBlend,
-      activeCompound: INGREDIENT_TARGETS.activeCompound,
-      bioavailability: INGREDIENT_TARGETS.bioavailability,
-    })
-
-    // Simple width animation for progress bars
-    const fills = document.querySelectorAll(".ingredient-fill")
-    if (fills.length > 0) {
-      gsap.fromTo(
-        fills,
-        { width: "0%" },
-        { 
-          width: (_, target) => target.getAttribute("data-width"), 
-          duration: 0.6, 
-          ease: "power2.out", 
-          stagger: 0.06 
-        }
       )
     }
   }, [isUnlocked])
@@ -283,7 +399,7 @@ export default function Verification() {
     setIsSendingOtp(true)
     
     try {
-      const response = await verificationApi.sendOTP(mobile, serialNumber)
+      const response = await verificationApi.sendOTP(mobile, serialNumber, isBatchFlow ? batchId : null)
       
       if (response.success) {
         setIsOtpSent(true)
@@ -316,7 +432,7 @@ export default function Verification() {
     setIsVerifyingOtp(true)
     
     try {
-      const response = await verificationApi.verifyOTP(mobile, otp, serialNumber)
+      const response = await verificationApi.verifyOTP(mobile, otp, serialNumber, firstName, lastName, isBatchFlow ? batchId : null, sessionId)
       
       if (response.success) {
         const { user, token, verification, coa } = response.data
@@ -404,6 +520,10 @@ export default function Verification() {
       <Suspense fallback={null}>
         <HeroBackground count={60} opacity={0.6} size={0.04} className="pointer-events-none absolute inset-0 z-0" />
       </Suspense>
+
+      {isVerifying ? (
+        <VerificationSkeleton />
+      ) : (
       <div className="relative z-10 mx-auto max-w-6xl space-y-5 sm:space-y-6">
         {/* SECTION: PAGE HEADER */}
         <header className="verify-heading text-center">
@@ -473,8 +593,8 @@ export default function Verification() {
                 ✅ {productData?.isCoaUnlocked ? "Product verified - COA unlocked" : "Authentic product - scanned"}
               </div>
             ) : (
-              <div className="rounded-xl border border-[#FDE8E8] bg-[#FEF2F2] px-4 py-2 text-red-600">
-                ⚠️ Verifying product authenticity...
+              <div className="rounded-xl border border-[#E8ECE8] bg-[#F7F8F5] px-4 py-2 text-[#888]">
+                Verifying product authenticity...
               </div>
             )}
           </div>
@@ -488,7 +608,18 @@ export default function Verification() {
                 <h3 className="text-xl font-bold text-[#111111]">Identity Check</h3>
                 <p className="mt-1 text-sm text-[var(--muted)]">Enter mobile number and OTP to unlock full CoA metrics.</p>
 
-                <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <label className="text-sm font-medium text-[#111111]">
+                    First Name
+                    <Input value={firstName} onChange={(event) => setFirstName(event.target.value)} type="text" placeholder="First name" className="mt-2 border-[#E8ECE8] bg-white text-[#111111]" />
+                  </label>
+                  <label className="text-sm font-medium text-[#111111]">
+                    Last Name
+                    <Input value={lastName} onChange={(event) => setLastName(event.target.value)} type="text" placeholder="Last name" className="mt-2 border-[#E8ECE8] bg-white text-[#111111]" />
+                  </label>
+                </div>
+
+                <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
                   <label className="text-sm font-medium text-[#111111]">
                     Mobile Number
                     <Input value={mobile} onChange={(event) => setMobile(event.target.value)} type="tel" placeholder="+91 XXXXX XXXXX" className="mt-2 border-[#E8ECE8] bg-white text-[#111111]" />
@@ -518,83 +649,24 @@ export default function Verification() {
 
           <div className="coa-reveal flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-2xl font-black text-[#111111] sm:text-3xl">Certificate of Analysis (via Business Central)</h3>
-              <p className="mt-1 text-sm text-[var(--muted)]">Quality test results from Business Central ERP</p>
+              <h3 className="text-2xl font-black text-[#111111] sm:text-3xl">Certificate of Analysis</h3>
+              <p className="mt-1 text-sm text-[var(--muted)]">Quality test results for this batch</p>
             </div>
-            <span className="rounded-full bg-[#11b5b2] px-3 py-1 text-xs font-semibold text-white">{DUMMY_COA.status}</span>
+            <span className="rounded-full bg-[#11b5b2] px-3 py-1 text-xs font-semibold text-white">Approved</span>
           </div>
-
-          <div className="coa-reveal mt-4 flex flex-col gap-1 border-b border-[#E8ECE8] pb-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-            <span className="text-[var(--muted)]">Report Date</span>
-            <span className="font-medium text-[#111111] sm:text-right">
-              {coaData?.issue_date || DUMMY_COA.reportDate}
-            </span>
-          </div>
-
-          <h4 className="coa-reveal mt-4 text-xl font-bold text-[#111111]">Test Parameters</h4>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <div className="coa-reveal rounded-xl border border-[#E8ECE8] bg-[#F7F8F5] px-4 py-3">
-              <p className="text-sm text-[var(--muted)]">Purity</p>
-              <p className="text-2xl font-bold text-[#111111]">{metricValues.purity}%</p>
+ 
+ 
+          {coaData?.coa_data && typeof coaData.coa_data === 'object' ? (
+            <CertificateRenderer data={coaData.coa_data} />
+          ) : (
+            <div className="coa-reveal mt-3 rounded-xl border border-[#E8ECE8] bg-[#F7F8F5] px-4 py-6 text-center">
+              <p className="text-sm text-[var(--muted)]">No COA data available for this batch.</p>
             </div>
-            <div className="coa-reveal rounded-xl border border-[#E8ECE8] bg-[#F7F8F5] px-4 py-3">
-              <p className="text-sm text-[var(--muted)]">Heavy Metals</p>
-              <p className="text-2xl font-bold text-[#111111]">{`< ${metricValues.heavyMetals} ppm`}</p>
-            </div>
-            <div className="coa-reveal rounded-xl border border-[#E8ECE8] bg-[#F7F8F5] px-4 py-3">
-              <p className="text-sm text-[var(--muted)]">Moisture</p>
-              <p className="text-2xl font-bold text-[#111111]">{metricValues.moisture}%</p>
-            </div>
-            <div className="coa-reveal rounded-xl border border-[#E8ECE8] bg-[#F7F8F5] px-4 py-3">
-              <p className="text-sm text-[var(--muted)]">pH Value</p>
-              <p className="text-2xl font-bold text-[#111111]">{metricValues.ph}</p>
-            </div>
-            <div className="coa-reveal rounded-xl border border-[#E8ECE8] bg-[#F7F8F5] px-4 py-3 sm:col-span-2">
-              <p className="text-sm text-[var(--muted)]">Microbial Count</p>
-              <p className="text-2xl font-bold text-[#111111]">{`< ${metricValues.microbial} CFU/g`}</p>
-            </div>
-          </div>
+          )}
 
           <div className="coa-reveal mt-4 rounded-xl border border-[#CFECD8] bg-[#ECFAF1] px-4 py-3 text-[#21543a]">
             <p className="text-sm text-[var(--muted)]">Conclusion</p>
             <p className="text-lg font-medium">All parameters within specifications. Batch approved for release.</p>
-          </div>
-
-          <div className="coa-reveal mt-4 rounded-2xl border border-[#D9E2DE] bg-[#F7F8F5] p-4 sm:p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h4 className="text-lg font-bold text-[#111111]">Ingredient Composition Snapshot</h4>
-              <span className="rounded-full bg-[#EAF8EF] px-3 py-1 text-xs font-semibold text-[var(--green)]">Batch Profile</span>
-            </div>
-            <p className="mt-1 text-sm text-[var(--muted)]">Interactive preview of this batch profile before full report download.</p>
-            <div className="mt-4 space-y-3">
-              <div className="rounded-xl border border-[#E8ECE8] bg-white px-3 py-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium text-[#111111]">Botanical Blend</span>
-                  <span className="font-bold text-[#11b5b2]">{ingredientValues.botanicalBlend}%</span>
-                </div>
-                <div className="mt-2 h-2 rounded-full bg-[#E8ECE8]">
-                  <div className="ingredient-fill h-2 rounded-full bg-[#11b5b2]" data-width="68%" />
-                </div>
-              </div>
-              <div className="rounded-xl border border-[#E8ECE8] bg-white px-3 py-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium text-[#111111]">Active Compound</span>
-                  <span className="font-bold text-[#11b5b2]">{ingredientValues.activeCompound}%</span>
-                </div>
-                <div className="mt-2 h-2 rounded-full bg-[#E8ECE8]">
-                  <div className="ingredient-fill h-2 rounded-full bg-[#11b5b2]" data-width="24%" />
-                </div>
-              </div>
-              <div className="rounded-xl border border-[#E8ECE8] bg-white px-3 py-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium text-[#111111]">Bioavailability Score</span>
-                  <span className="font-bold text-[#11b5b2]">{ingredientValues.bioavailability}%</span>
-                </div>
-                <div className="mt-2 h-2 rounded-full bg-[#E8ECE8]">
-                  <div className="ingredient-fill h-2 rounded-full bg-[#11b5b2]" data-width="93%" />
-                </div>
-              </div>
-            </div>
           </div>
 
           {isUnlocked && (
@@ -636,6 +708,7 @@ export default function Verification() {
         )}
 
       </div>
+      )} {/* end isVerifying */}
 
       {/* SECTION: SHOP CTA (ALWAYS VISIBLE NEAR FOOTER) */}
       <div className="relative z-10 mt-12 -mx-4 sm:-mx-6 lg:-mx-8">

@@ -39,7 +39,7 @@ export default function UserView() {
   const handleDelete = async () => {
     const confirmed = await confirm({
       title: "Delete User",
-      description: `Are you sure you want to delete "${user.name}"? This action cannot be undone.`
+      description: `Are you sure you want to delete "${[user.first_name, user.last_name].filter(Boolean).join(" ") || user.mobile_number}"? This action cannot be undone.`
     })
 
     if (!confirmed) return
@@ -125,7 +125,9 @@ export default function UserView() {
             <User className="h-8 w-8 text-white" />
           </div>
           <div className="flex-1">
-            <h2 className="text-2xl font-semibold text-gray-900">{user.name}</h2>
+            <h2 className="text-2xl font-semibold text-gray-900">
+              {[user.first_name, user.last_name].filter(Boolean).join(" ") || user.mobile_number}
+            </h2>
             <div className="flex items-center gap-2 mt-2">
               <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${
                 user.is_active 

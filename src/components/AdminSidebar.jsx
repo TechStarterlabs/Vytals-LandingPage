@@ -18,7 +18,9 @@ import {
   FolderOpen,
   Activity,
   UserCircle,
-  Database
+  Database,
+  KeyRound,
+  Zap
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { authService } from "@/lib/auth"
@@ -101,7 +103,8 @@ export default function AdminSidebar() {
       label: "Master",
       items: [
         { icon: ShoppingBag, label: "Products", path: "/admin/products", permission: "products.view" },
-        { icon: UserCog, label: "Roles", path: "/admin/roles", permission: "roles.view" }
+        { icon: UserCog, label: "Roles", path: "/admin/roles", permission: "roles.view" },
+        { icon: KeyRound, label: "API Clients", path: "/admin/clients", permission: "api_clients.view" }
       ]
     },
     {
@@ -122,7 +125,8 @@ export default function AdminSidebar() {
       label: "Logs",
       items: [
         { icon: ListChecks, label: "Scan Logs", path: "/admin/scan-logs", permission: "scan_logs.view" },
-        { icon: Database, label: "Integration Logs", path: "/admin/integration-logs", permission: "integration_logs.view" }
+        { icon: Database, label: "Integration Logs", path: "/admin/integration-logs", permission: "integration_logs.view" },
+        { icon: Zap, label: "API Tester", path: "/admin/integration-api", permission: "integration_logs.view" }
       ]
     },
     {

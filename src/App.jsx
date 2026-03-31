@@ -11,6 +11,7 @@ import { getFirstAccessibleRoute } from "@/utils/permissions"
 // Lazy load only admin components
 const Home = lazy(() => import("@/pages/Home"))
 const Verification = lazy(() => import("@/pages/Verification"))
+const ProductHome = lazy(() => import("@/pages/ProductHome"))
 const Footer = lazy(() => import("@/components/Footer"))
 const AdminSidebar = lazy(() => import("@/components/AdminSidebar"))
 const AdminNavbar = lazy(() => import("@/components/AdminNavbar"))
@@ -47,6 +48,10 @@ const UserForm = lazy(() => import("@/pages/admin/UserForm"))
 const Roles = lazy(() => import("@/pages/admin/Roles"))
 const RoleView = lazy(() => import("@/pages/admin/RoleView"))
 const RoleForm = lazy(() => import("@/pages/admin/RoleForm"))
+const Clients = lazy(() => import("@/pages/admin/Clients"))
+const ClientView = lazy(() => import("@/pages/admin/ClientView"))
+const ClientForm = lazy(() => import("@/pages/admin/ClientForm"))
+const IntegrationApiTester = lazy(() => import("@/pages/admin/IntegrationApiTester"))
 
 function ScrollToTopAndHash() {
   const location = useLocation()
@@ -81,16 +86,15 @@ function AdminIndexRedirect() {
 
 function AppLayout() {
   const location = useLocation()
-  const isHome = location.pathname === "/"
-  const isVerificationPage = location.pathname === "/verify"
+  const showFooter = !location.pathname.startsWith("/admin")
 
   return (
     <div className="relative flex min-h-screen flex-col bg-[var(--bg)] text-[var(--white)]">
-      <Navbar compact={isHome || isVerificationPage} />
+      <Navbar compact={location.pathname === "/" || location.pathname === "/verify"} />
       <main className="relative z-10 flex-1" key={location.pathname}>
         <Outlet />
       </main>
-      {(isHome || isVerificationPage) && (
+      {showFooter && (
         <div className="relative z-10">
           <Suspense fallback={null}>
             <Footer />
@@ -141,6 +145,22 @@ function App() {
               />
               <Route
                 path="/verify"
+                element={
+                  <Suspense fallback={<Loader />}>
+                    <Verification />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/:productSlug"
+                element={
+                  <Suspense fallback={<Loader />}>
+                    <ProductHome />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/:productSlug/verify"
                 element={
                   <Suspense fallback={<Loader />}>
                     <Verification />
@@ -208,6 +228,11 @@ function App() {
               <Route path="roles/new" element={<RoleForm />} />
               <Route path="roles/:id" element={<RoleView />} />
               <Route path="roles/:id/edit" element={<RoleForm />} />
+              <Route path="clients" element={<Clients />} />
+              <Route path="clients/new" element={<ClientForm />} />
+              <Route path="clients/:id" element={<ClientView />} />
+              <Route path="clients/:id/edit" element={<ClientForm />} />
+              <Route path="integration-api" element={<IntegrationApiTester />} />
             </Route>
 
             <Route path="*" element={<Navigate replace to="/" />} />
