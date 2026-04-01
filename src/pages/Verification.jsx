@@ -601,7 +601,7 @@ export default function Verification() {
         </article>
 
         {/* SECTION: COA METRICS (LOCKED UNTIL OTP) */}
-        <article ref={coaSectionRef} className="verify-card relative overflow-hidden rounded-2xl border border-[#D9E2DE] bg-white/90 p-5 backdrop-blur-[1px] sm:p-6">
+        <article ref={coaSectionRef} className={`verify-card relative overflow-hidden rounded-2xl border border-[#D9E2DE] bg-white/90 p-5 backdrop-blur-[1px] sm:p-6${!isUnlocked ? " min-h-[520px]" : ""}`}>
           {!isUnlocked && (
             <div ref={lockOverlayRef} className="absolute inset-0 z-10 flex items-center justify-center bg-white/58 p-3 backdrop-blur-md sm:p-6">
               <div className="w-full max-w-4xl rounded-2xl border border-[#CFECD8] bg-white/92 p-5 shadow-[0_18px_60px_rgba(17,181,178,0.16)] sm:p-6">
