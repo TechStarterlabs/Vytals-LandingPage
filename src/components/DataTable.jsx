@@ -14,7 +14,8 @@ export default function DataTable({
   customActions,
   customHeaderActions,
   loading = false,
-  pagination = null // { currentPage, totalPages, onPageChange }
+  pagination = null, // { current_page/currentPage, total_pages/totalPages, total_records/totalRecords, limit }
+  onPageChange = null // top-level onPageChange callback (alternative to pagination.onPageChange)
 }) {
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
@@ -35,21 +36,32 @@ export default function DataTable({
     )
   }, [data, searchTerm, isServerPagination])
 
+  // Support both camelCase and snake_case pagination keys
+  const serverTotalPages = pagination?.totalPages ?? pagination?.total_pages
+  const serverCurrentPage = pagination?.currentPage ?? pagination?.current_page
+  const serverTotalRecords = pagination?.totalRecords ?? pagination?.total_records
+
   // Pagination (client-side)
-  const totalPages = isServerPagination ? pagination.totalPages : Math.ceil(filteredData.length / itemsPerPage)
-  const activePage = isServerPagination ? pagination.currentPage : currentPage
-  const startIndex = (activePage - 1) * itemsPerPage
+  const totalPages = isServerPagination ? serverTotalPages : Math.ceil(filteredData.length / itemsPerPage)
+  const activePage = isServerPagination ? serverCurrentPage : currentPage
+  const startIndex = isServerPagination ? 0 : (activePage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
   const currentData = isServerPagination ? data : filteredData.slice(startIndex, endIndex)
-  const totalRecords = isServerPagination ? pagination.totalRecords || data.length : filteredData.length
+  const totalRecords = isServerPagination ? serverTotalRecords || data.length : filteredData.length
 
   const handlePageChange = (newPage) => {
     if (isServerPagination) {
-      pagination.onPageChange(newPage)
+      const handler = onPageChange ?? pagination?.onPageChange
+      if (handler) handler(newPage)
     } else {
       setCurrentPage(newPage)
     }
   }
+
+  // For display purposes in server-side mode, calculate offset from server page
+  const displayStartIndex = isServerPagination
+    ? (activePage - 1) * (pagination?.limit ?? itemsPerPage)
+    : startIndex
 
   // Export to CSV
   const exportToCSV = () => {
@@ -157,7 +169,7 @@ export default function DataTable({
                   >
                     {columns.map((column, colIndex) => (
                       <td key={colIndex} className="px-4 sm:px-6 py-4 text-sm text-gray-900">
-                        {column.cell ? column.cell(row, startIndex + rowIndex) : row[column.accessor]}
+                        {column.cell ? column.cell(row, displayStartIndex + rowIndex) : row[column.accessor]}
                       </td>
                     ))}
                   </tr>
@@ -195,7 +207,7 @@ export default function DataTable({
             </div>
             
             <div className="text-sm text-gray-700">
-              Showing {totalRecords > 0 ? startIndex + 1 : 0} to {Math.min(endIndex, totalRecords)} of {totalRecords} entries
+              Showing {totalRecords > 0 ? displayStartIndex + 1 : 0} to {Math.min(displayStartIndex + (isServerPagination ? data.length : itemsPerPage), totalRecords)} of {totalRecords} entries
             </div>
           </div>
           
