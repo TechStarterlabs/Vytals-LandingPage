@@ -20,7 +20,8 @@ import {
   UserCircle,
   Database,
   KeyRound,
-  Zap
+  Zap,
+  Globe
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { authService } from "@/lib/auth"
@@ -41,6 +42,7 @@ export default function AdminSidebar() {
     master: true,
     inventory: true,
     logs: false,
+    apis: false,
     users: false
   })
 
@@ -126,7 +128,16 @@ export default function AdminSidebar() {
       items: [
         { icon: ListChecks, label: "Scan Logs", path: "/admin/scan-logs", permission: "scan_logs.view" },
         { icon: Database, label: "Integration Logs", path: "/admin/integration-logs", permission: "integration_logs.view" },
-        { icon: Zap, label: "API Tester", path: "/admin/integration-api", permission: "integration_logs.view" }
+      ]
+    },
+    {
+      type: 'group',
+      name: 'apis',
+      icon: Globe,
+      label: "APIs",
+      items: [
+        { icon: Zap, label: "Vytals Integration API", path: "/admin/integration-api", permission: "integration_logs.view" },
+        { icon: Database, label: "ERP API (Business Central)", path: "/admin/erp-api", permission: "integration_logs.view" },
       ]
     },
     {

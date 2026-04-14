@@ -17,7 +17,8 @@ export default function IntegrationLogs() {
   const [filters, setFilters] = useState({
     status: '',
     method: '',
-    client_id: ''
+    client_id: '',
+    source: ''
   })
   const [stats, setStats] = useState({
     total_logs: 0,
@@ -49,6 +50,7 @@ export default function IntegrationLogs() {
       if (filters.status) queryParams.append('status', filters.status)
       if (filters.method) queryParams.append('method', filters.method)
       if (filters.client_id) queryParams.append('client_id', filters.client_id)
+      if (filters.source) queryParams.append('source', filters.source)
 
       const response = await apiClient.get(`/admin/integration-logs?${queryParams.toString()}`)
       setLogs(response.data.logs || [])
@@ -155,6 +157,19 @@ export default function IntegrationLogs() {
     {
       header: "#",
       cell: (row, index) => (pagination.current_page - 1) * pagination.limit + index + 1
+    },
+    {
+      header: "SOURCE",
+      cell: (row) => {
+        const isERP = row.source === 'erp_bc'
+        return (
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            isERP ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+          }`}>
+            {isERP ? 'ERP (BC)' : 'Inbound'}
+          </span>
+        )
+      }
     },
     {
       header: "CLIENT",
@@ -326,7 +341,20 @@ export default function IntegrationLogs() {
             </select>
           </div>
 
-          <div className="md:col-span-2 flex items-end">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Source</label>
+            <select
+              value={filters.source}
+              onChange={(e) => handleFilterChange('source', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#338291] text-sm"
+            >
+              <option value="">All</option>
+              <option value="inbound">Inbound (ERP → Vytals)</option>
+              <option value="erp_bc">ERP BC (Vytals → BC)</option>
+            </select>
+          </div>
+
+          <div className="flex items-end">
             <button
               onClick={handleRefresh}
               className="flex items-center gap-2 px-4 py-2 bg-[#338291] text-white rounded-lg hover:bg-[#2a6d7a] transition-colors text-sm font-medium"

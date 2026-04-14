@@ -52,6 +52,7 @@ const Clients = lazy(() => import("@/pages/admin/Clients"))
 const ClientView = lazy(() => import("@/pages/admin/ClientView"))
 const ClientForm = lazy(() => import("@/pages/admin/ClientForm"))
 const IntegrationApiTester = lazy(() => import("@/pages/admin/IntegrationApiTester"))
+const ERPApiTester = lazy(() => import("@/pages/admin/ERPApiTester"))
 
 function ScrollToTopAndHash() {
   const location = useLocation()
@@ -233,6 +234,7 @@ function App() {
               <Route path="clients/:id" element={<ClientView />} />
               <Route path="clients/:id/edit" element={<ClientForm />} />
               <Route path="integration-api" element={<IntegrationApiTester />} />
+              <Route path="erp-api" element={<ERPApiTester />} />
             </Route>
 
             <Route path="*" element={<Navigate replace to="/" />} />

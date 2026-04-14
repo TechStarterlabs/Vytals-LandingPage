@@ -133,17 +133,22 @@ export default function COA() {
       }
     },
     {
-      header: "FILE",
-      cell: (row) => (
-        <a
-          href={row.file_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[#338291] hover:text-[#2a6d7a] text-sm underline"
-        >
-          View PDF
-        </a>
-      )
+      header: "PDF",
+      cell: (row) => {
+        if (row.is_pdf_generated && row.file_url) {
+          return (
+            <a href={row.file_url} target="_blank" rel="noopener noreferrer"
+              className="text-[#338291] hover:text-[#2a6d7a] text-sm underline">
+              View PDF
+            </a>
+          )
+        }
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-yellow-100 text-yellow-700">
+            Not generated
+          </span>
+        )
+      }
     },
     {
       header: "CREATED",
