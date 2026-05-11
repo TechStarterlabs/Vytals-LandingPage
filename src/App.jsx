@@ -33,6 +33,8 @@ const ScanLogs = lazy(() => import("@/pages/admin/ScanLogs"))
 const ScanLogView = lazy(() => import("@/pages/admin/ScanLogView"))
 const IntegrationLogs = lazy(() => import("@/pages/admin/IntegrationLogs"))
 const IntegrationLogView = lazy(() => import("@/pages/admin/IntegrationLogView"))
+const ERPLogs = lazy(() => import("@/pages/admin/ERPLogs"))
+const ERPLogView = lazy(() => import("@/pages/admin/ERPLogView"))
 const Customers = lazy(() => import("@/pages/admin/Customers"))
 const CustomerView = lazy(() => import("@/pages/admin/CustomerView"))
 const CustomerForm = lazy(() => import("@/pages/admin/CustomerForm"))
@@ -53,6 +55,9 @@ const ClientView = lazy(() => import("@/pages/admin/ClientView"))
 const ClientForm = lazy(() => import("@/pages/admin/ClientForm"))
 const IntegrationApiTester = lazy(() => import("@/pages/admin/IntegrationApiTester"))
 const ERPApiTester = lazy(() => import("@/pages/admin/ERPApiTester"))
+const ERPSync = lazy(() => import("@/pages/admin/ERPSync"))
+const ERPSyncHistory = lazy(() => import("@/pages/admin/ERPSyncHistory"))
+const ERPSyncBuffer = lazy(() => import("@/pages/admin/ERPSyncBuffer"))
 
 function ScrollToTopAndHash() {
   const location = useLocation()
@@ -152,22 +157,6 @@ function App() {
                   </Suspense>
                 }
               />
-              <Route
-                path="/:productSlug"
-                element={
-                  <Suspense fallback={<Loader />}>
-                    <ProductHome />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="/:productSlug/verify"
-                element={
-                  <Suspense fallback={<Loader />}>
-                    <Verification />
-                  </Suspense>
-                }
-              />
             </Route>
 
             <Route
@@ -209,6 +198,8 @@ function App() {
               <Route path="scan-logs/:id" element={<ScanLogView />} />
               <Route path="integration-logs" element={<IntegrationLogs />} />
               <Route path="integration-logs/:logId" element={<IntegrationLogView />} />
+              <Route path="erp-logs" element={<ERPLogs />} />
+              <Route path="erp-logs/:logId" element={<ERPLogView />} />
               <Route path="customers" element={<Customers />} />
               <Route path="customers/new" element={<CustomerForm />} />
               <Route path="customers/:id" element={<CustomerView />} />
@@ -235,6 +226,9 @@ function App() {
               <Route path="clients/:id/edit" element={<ClientForm />} />
               <Route path="integration-api" element={<IntegrationApiTester />} />
               <Route path="erp-api" element={<ERPApiTester />} />
+              <Route path="erp-sync" element={<ERPSync />} />
+              <Route path="erp-sync-history" element={<ERPSyncHistory />} />
+              <Route path="erp-sync-buffer" element={<ERPSyncBuffer />} />
             </Route>
 
             <Route path="*" element={<Navigate replace to="/" />} />

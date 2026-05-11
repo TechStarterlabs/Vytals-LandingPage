@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo, lazy, Suspense } from "react"
-import { useSearchParams, useParams } from "react-router-dom"
+import { useSearchParams } from "react-router-dom"
 import { gsap } from "gsap"
 
 import { useVerificationStore } from "@/lib/verification-store"
@@ -122,7 +122,6 @@ function getFallbackBatch(serial) {
 
 export default function Verification() {
   const [searchParams] = useSearchParams()
-  const { productSlug } = useParams()
   const {
     customerToken,
     lastMobile,
@@ -240,13 +239,12 @@ export default function Verification() {
     }
   }
 
-  const verifyBatchInitially = async (batchCode, slug) => {
+  const verifyBatchInitially = async (batchCode) => {
     try {
       console.log('=== BATCH VERIFICATION API CALL ===')
       console.log('Batch Code:', batchCode)
-      console.log('Product Slug:', slug)
 
-      const response = await verificationApi.verifyBatch(batchCode, slug, sessionId)
+      const response = await verificationApi.verifyBatch(batchCode, sessionId)
       console.log('Batch API Response:', response.data)
 
       if (response.success) {
@@ -318,32 +316,42 @@ export default function Verification() {
     }
     
     try {
-      const decoded = JSON.parse(atob(decodeURIComponent(encoded)))
-      const isBatchFlow = decoded?.b !== undefined && decoded?.s === undefined
+      // BC QR URLs encode as plain base64 string: "{lotNo}-{serialNo}"
+      // Our own QR URLs encode as JSON: { b: batchCode } or { s: serial, b: batch }
+      let decoded
+      let isBatchFlow = false
+      let batchCode = null
+      let serialNo = null
+
+      const rawDecoded = atob(decodeURIComponent(encoded))
+
+      try {
+        decoded = JSON.parse(rawDecoded)
+        isBatchFlow = decoded?.b !== undefined && decoded?.s === undefined
+        batchCode = decoded?.b || null
+        serialNo = decoded?.s || null
+      } catch {
+        // Not JSON — BC format: "lotNo-serialNo" or "lotNo-"
+        const parts = rawDecoded.split('-')
+        batchCode = parts[0] || null
+        serialNo = parts.slice(1).join('-') || null
+        // If serialNo is empty string, it's a lot-only (batch) scan
+        isBatchFlow = !serialNo
+      }
 
       if (isBatchFlow) {
-        // Batch_Flow: payload has `b` but no `s`
-        const batchCode = decoded.b
         if (!batchCode) throw new Error('Missing batch code')
-
         setBatchId(batchCode)
-        setSerialNumber("Batch Entry")
+        setSerialNumber("Batch Scan")
         setIsValidSerial(true)
         setIsBatchFlow(true)
-
-        verifyBatchInitially(batchCode, productSlug)
+        verifyBatchInitially(batchCode)
       } else {
-        // QR_Flow: payload has `s` (serial number)
-        const nextSerial = decoded?.s
-        const nextBatch = decoded?.b || (decoded?.s ? getFallbackBatch(decoded.s) : null)
-
-        if (!nextSerial) throw new Error('Invalid serial number')
-
-        setSerialNumber(nextSerial)
-        if (nextBatch) setBatchId(nextBatch)
+        if (!serialNo) throw new Error('Invalid serial number')
+        setSerialNumber(serialNo)
+        if (batchCode) setBatchId(batchCode)
         setIsValidSerial(true)
-
-        verifyProductInitially(nextSerial)
+        verifyProductInitially(serialNo)
       }
     } catch (error) {
       console.error('Invalid verification URL:', error)
@@ -572,8 +580,23 @@ export default function Verification() {
           <div className="mb-4 flex items-center gap-2">
             <h2 className="text-2xl font-bold text-[#111111]">Product Information</h2>
             <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#eaf8ef] text-xs text-[var(--green)]">✓</span>
+            <span className={`ml-auto inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+              isBatchFlow ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+            }`}>
+              {isBatchFlow ? '📦 Batch Verification' : '🔍 Serial Verification'}
+            </span>
           </div>
           <div className="space-y-3 border-t border-[#E8ECE8] pt-4 text-sm">
+            {/* Product image — only shown when data is available */}
+            {productData?.product?.images?.[0] && (
+              <div className="pb-2">
+                <img
+                  src={productData.product.images[0].url}
+                  alt={productData.product.images[0].alt || productData.product.name}
+                  className="w-40 h-40 object-cover rounded-xl border border-[#E8ECE8]"
+                />
+              </div>
+            )}
             <div className="flex flex-col gap-1 border-b border-[#E8ECE8] pb-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <span className="text-[var(--muted)]">Product Name</span>
               <span className="break-all font-medium text-[#111111] sm:text-right">
@@ -584,13 +607,15 @@ export default function Verification() {
               <span className="text-[var(--muted)]">Batch Code</span>
               <span className="break-all font-medium text-[#111111] sm:text-right">{batchId}</span>
             </div>
-            <div className="flex flex-col gap-1 pb-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-              <span className="text-[var(--muted)]">Pack ID / Serial</span>
-              <span className="break-all font-medium text-[#111111] sm:text-right">{serialNumber}</span>
-            </div>
+            {!isBatchFlow && (
+              <div className="flex flex-col gap-1 border-b border-[#E8ECE8] pb-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                <span className="text-[var(--muted)]">Pack ID / Serial</span>
+                <span className="break-all font-medium text-[#111111] sm:text-right">{serialNumber}</span>
+              </div>
+            )}
             {productData ? (
               <div className="rounded-xl border border-[#CFECD8] bg-[#ECFAF1] px-4 py-2 text-[var(--green)]">
-                ✅ {productData?.isCoaUnlocked ? "Product verified - COA unlocked" : "Authentic product - scanned"}
+                ✅ {isBatchFlow ? 'Authentic batch — verified' : productData?.isCoaUnlocked ? 'Product verified — COA unlocked' : 'Authentic product — scanned'}
               </div>
             ) : (
               <div className="rounded-xl border border-[#E8ECE8] bg-[#F7F8F5] px-4 py-2 text-[#888]">

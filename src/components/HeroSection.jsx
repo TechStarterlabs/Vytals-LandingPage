@@ -1,9 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { gsap } from "gsap"
-import { ChevronDown } from "lucide-react"
 
-import { verificationApi } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 
@@ -14,18 +12,8 @@ export default function HeroSection() {
   const { toast } = useToast()
   const formCardRef = useRef(null)
   const buttonRef = useRef(null)
-
-  const [products, setProducts] = useState([])
-  const [selectedSlug, setSelectedSlug] = useState("")
-  const [loading, setLoading] = useState(true)
-  const [isOpen, setIsOpen] = useState(false)
-
-  useEffect(() => {
-    verificationApi.getProducts()
-      .then(res => setProducts(res.data || []))
-      .catch(() => setProducts([]))
-      .finally(() => setLoading(false))
-  }, [])
+  const [batchCode, setBatchCode] = useState("")
+  const [error, setError] = useState("")
 
   useEffect(() => {
     if (!formCardRef.current) return
@@ -36,17 +24,23 @@ export default function HeroSection() {
     )
   }, [])
 
-  const selectedProduct = products.find(p => p.slug === selectedSlug)
-
-  const handleNext = () => {
-    if (!selectedSlug) {
-      toast({ title: "Select a product", description: "Please choose a product to continue.", variant: "destructive" })
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    const trimmed = batchCode.trim()
+    if (!trimmed || trimmed.length < 3) {
+      setError("Please enter a valid batch number (min 3 characters)")
       return
     }
+    setError("")
+
     if (formCardRef.current) {
       gsap.to(formCardRef.current, { y: -6, scale: 0.985, duration: 0.2, ease: "power2.out" })
     }
-    setTimeout(() => navigate(`/${selectedSlug}`), 250)
+
+    toast({ title: "Verifying...", description: "Looking up your batch number.", variant: "default" })
+
+    const encoded = btoa(JSON.stringify({ b: trimmed }))
+    setTimeout(() => navigate(`/verify?ref=${encodeURIComponent(encoded)}`), 300)
   }
 
   const handleButtonHover = () => {
@@ -74,79 +68,43 @@ export default function HeroSection() {
             ✦ Verify Your Product · Batch Authentication
           </Badge>
           <h1 className="space-y-1 text-4xl font-black leading-[0.95] text-[#111111] sm:text-6xl lg:text-7xl">
-            <span className="fade-up block [animation-delay:160ms]">Your Product.</span>
+            <span className="fade-up block [animation-delay:160ms]">Your Batch.</span>
             <span className="fade-up block [animation-delay:300ms]">Verified.</span>
             <span className="fade-up block [animation-delay:420ms]">Instantly.</span>
           </h1>
           <p className="max-w-xl text-sm text-[#4f4f4f] sm:text-lg">
-            Select your product below to begin the verification process.
+            Enter the batch number printed on your product packaging to verify its authenticity.
           </p>
         </div>
 
-        {/* Product selector card */}
+        {/* Batch input card */}
         <div className="relative w-full rounded-3xl border border-[#E8ECE8] bg-[#F7F8F5] p-3 sm:p-6">
-          <div ref={formCardRef} className="relative z-10 rounded-2xl border border-[#E8ECE8] bg-white p-3.5 sm:p-5">
-            <label className="block text-sm font-medium text-[#111111] mb-2">
-              Select Product
+          <form
+            ref={formCardRef}
+            onSubmit={handleSubmit}
+            className="relative z-10 rounded-2xl border border-[#E8ECE8] bg-white p-3.5 sm:p-5"
+          >
+            <label className="block text-sm font-medium text-[#111111]">
+              Batch Number
+              <input
+                type="text"
+                value={batchCode}
+                onChange={(e) => { setBatchCode(e.target.value); setError("") }}
+                placeholder="e.g. 022503000001"
+                className="mt-2 w-full rounded-xl border border-[#E8ECE8] px-4 py-3 text-[#111111] outline-none focus:border-[var(--green)] transition-colors"
+              />
+              {error && <span className="mt-1 block text-xs text-red-500">{error}</span>}
             </label>
-
-            {/* Custom dropdown */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => !loading && setIsOpen(o => !o)}
-                className={`w-full flex items-center justify-between rounded-xl border px-4 py-3 text-left text-sm outline-none transition-colors ${
-                  isOpen ? "border-[var(--green)]" : "border-[#E8ECE8]"
-                } ${loading ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-[var(--green)]"}`}
-              >
-                <span className={selectedProduct ? "text-[#111111]" : "text-gray-400"}>
-                  {loading
-                    ? "Loading products…"
-                    : selectedProduct
-                      ? `${selectedProduct.name}${selectedProduct.pack_size ? ` — ${selectedProduct.pack_size}` : ""}`
-                      : "Choose a product…"}
-                </span>
-                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-              </button>
-
-              {isOpen && products.length > 0 && (
-                <ul className="absolute z-20 mt-1 w-full rounded-xl border border-[#E8ECE8] bg-white shadow-lg max-h-56 overflow-y-auto">
-                  {products.map(product => (
-                    <li key={product.product_id}>
-                      <button
-                        type="button"
-                        onClick={() => { setSelectedSlug(product.slug); setIsOpen(false) }}
-                        className={`w-full px-4 py-3 text-left text-sm hover:bg-[#F7F8F5] transition-colors ${
-                          selectedSlug === product.slug ? "bg-[#F0FAF9] text-[var(--green)] font-medium" : "text-[#111111]"
-                        }`}
-                      >
-                        {product.name}
-                        {product.pack_size && <span className="ml-1 text-gray-400">— {product.pack_size}</span>}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              {isOpen && !loading && products.length === 0 && (
-                <div className="absolute z-20 mt-1 w-full rounded-xl border border-[#E8ECE8] bg-white shadow-lg px-4 py-3 text-sm text-gray-400">
-                  No products available
-                </div>
-              )}
-            </div>
-
             <button
-              type="button"
-              disabled={!selectedSlug || loading}
-              onClick={handleNext}
+              type="submit"
               onMouseEnter={handleButtonHover}
               onMouseLeave={handleButtonLeave}
               ref={buttonRef}
-              className="mt-4 w-full rounded-xl bg-[var(--green)] py-3 font-bold text-white transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-4 w-full rounded-xl bg-[var(--green)] py-3 font-bold text-white transition hover:opacity-90"
             >
-              Next →
+              Verify Batch →
             </button>
-          </div>
+          </form>
         </div>
       </div>
     </section>

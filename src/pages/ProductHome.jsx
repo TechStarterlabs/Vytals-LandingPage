@@ -25,7 +25,7 @@ export default function ProductHome() {
   })
 
   const onSubmit = (data) => {
-    const batchCode = data.batchCode.trim().toUpperCase()
+    const batchCode = data.batchCode.trim()
     const encoded = btoa(JSON.stringify({ b: batchCode }))
 
     if (formCardRef.current) {

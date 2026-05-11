@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom"
 import { apiClient } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 
-export default function IntegrationLogs() {
+export default function ERPLogs() {
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState({
@@ -16,15 +16,13 @@ export default function IntegrationLogs() {
   })
   const [filters, setFilters] = useState({
     status: '',
-    method: '',
-    client_id: ''
+    method: ''
   })
   const [stats, setStats] = useState({
     total_logs: 0,
     success_logs: 0,
     error_logs: 0,
     success_rate: 0,
-    active_clients: 0,
     avg_processing_time_ms: 0
   })
   const [serverError, setServerError] = useState(false)
@@ -43,13 +41,11 @@ export default function IntegrationLogs() {
       const queryParams = new URLSearchParams({
         page: pagination.current_page,
         limit: pagination.limit,
-        source: 'inbound'
+        source: 'erp_bc'
       })
-      
-      // Add filters if they exist
+
       if (filters.status) queryParams.append('status', filters.status)
       if (filters.method) queryParams.append('method', filters.method)
-      if (filters.client_id) queryParams.append('client_id', filters.client_id)
 
       const response = await apiClient.get(`/admin/integration-logs?${queryParams.toString()}`)
       setLogs(response.data.logs || [])
@@ -60,9 +56,7 @@ export default function IntegrationLogs() {
         limit: 50
       })
     } catch (error) {
-      console.error('Fetch logs error:', error)
-      
-      // Check if it's a network error
+      console.error('Fetch ERP logs error:', error)
       if (error.message.includes('Network error') || error.message.includes('server is running')) {
         setServerError(true)
         toast({
@@ -73,12 +67,10 @@ export default function IntegrationLogs() {
       } else {
         toast({
           title: "Error",
-          description: error.message || "Failed to fetch integration logs",
+          description: error.message || "Failed to fetch ERP logs",
           variant: "destructive"
         })
       }
-      
-      // Set empty data on error
       setLogs([])
     } finally {
       setLoading(false)
@@ -87,16 +79,15 @@ export default function IntegrationLogs() {
 
   const fetchStats = async () => {
     try {
-      const response = await apiClient.get('/admin/integration-stats')
+      const response = await apiClient.get('/admin/integration-stats?source=erp_bc')
       setStats(response.data)
     } catch (error) {
-      console.error('Failed to fetch stats:', error)
-      // Don't show error toast for stats, just log it
+      console.error('Failed to fetch ERP stats:', error)
     }
   }
 
   const handleView = (log) => {
-    navigate(`/admin/integration-logs/${log.log_id}`)
+    navigate(`/admin/erp-logs/${log.log_id}`)
   }
 
   const handleRefresh = () => {
@@ -158,15 +149,6 @@ export default function IntegrationLogs() {
       cell: (row, index) => (pagination.current_page - 1) * pagination.limit + index + 1
     },
     {
-      header: "CLIENT",
-      cell: (row) => (
-        <div>
-          <div className="text-gray-900">{row.client?.client_name || 'N/A'}</div>
-          <div className="text-xs text-gray-500">ID: {row.client_id || 'N/A'}</div>
-        </div>
-      )
-    },
-    {
       header: "METHOD",
       cell: (row) => getMethodBadge(row.method)
     },
@@ -193,7 +175,6 @@ export default function IntegrationLogs() {
     },
     {
       header: "IP ADDRESS",
-      accessor: "ip_address",
       cell: (row) => (
         <span className="text-sm text-gray-600">{row.ip_address || 'N/A'}</span>
       )
@@ -230,7 +211,7 @@ export default function IntegrationLogs() {
             <div>
               <h3 className="text-sm font-medium text-red-800">Backend Server Not Running</h3>
               <p className="text-sm text-red-700 mt-1">
-                Please start the backend server to view integration logs.
+                Please start the backend server to view ERP logs.
                 <br />
                 <code className="bg-red-100 px-2 py-1 rounded text-xs mt-2 inline-block">
                   cd Vytals-Backend && npm start
@@ -249,8 +230,8 @@ export default function IntegrationLogs() {
               <p className="text-sm text-gray-600">Total Requests</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total_logs}</p>
             </div>
-            <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Activity className="h-6 w-6 text-blue-600" />
+            <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <Activity className="h-6 w-6 text-purple-600" />
             </div>
           </div>
         </div>
@@ -341,13 +322,13 @@ export default function IntegrationLogs() {
 
       {/* Data Table */}
       <DataTable
-        title="Integration Logs"
-        subtitle="Inbound API requests from clients to Vytals"
+        title="ERP Logs"
+        subtitle="Outbound requests from Vytals to Business Central ERP"
         columns={columns}
         data={logs}
         loading={loading}
         showAddButton={false}
-        exportFileName="integration-logs"
+        exportFileName="erp-logs"
         pagination={pagination}
         onPageChange={(page) => setPagination(prev => ({ ...prev, current_page: page }))}
       />

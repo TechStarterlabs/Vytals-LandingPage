@@ -21,7 +21,8 @@ import {
   Database,
   KeyRound,
   Zap,
-  Globe
+  Globe,
+  RefreshCw
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { authService } from "@/lib/auth"
@@ -43,6 +44,7 @@ export default function AdminSidebar() {
     inventory: true,
     logs: false,
     apis: false,
+    erp_sync: false,
     users: false
   })
 
@@ -128,6 +130,7 @@ export default function AdminSidebar() {
       items: [
         { icon: ListChecks, label: "Scan Logs", path: "/admin/scan-logs", permission: "scan_logs.view" },
         { icon: Database, label: "Integration Logs", path: "/admin/integration-logs", permission: "integration_logs.view" },
+        { icon: Globe, label: "ERP Logs", path: "/admin/erp-logs", permission: "integration_logs.view" },
       ]
     },
     {
@@ -137,7 +140,18 @@ export default function AdminSidebar() {
       label: "APIs",
       items: [
         { icon: Zap, label: "Vytals Integration API", path: "/admin/integration-api", permission: "integration_logs.view" },
-        { icon: Database, label: "ERP API (Business Central)", path: "/admin/erp-api", permission: "integration_logs.view" },
+        { icon: Database, label: "ERP API", path: "/admin/erp-api", permission: "integration_logs.view" },
+      ]
+    },
+    {
+      type: 'group',
+      name: 'erp_sync',
+      icon: RefreshCw,
+      label: "ERP Sync",
+      items: [
+        { icon: Activity, label: "Sync Dashboard", path: "/admin/erp-sync", permission: "integration_logs.view" },
+        { icon: ListChecks, label: "Sync History", path: "/admin/erp-sync-history", permission: "integration_logs.view" },
+        { icon: Database, label: "Buffer Inspector", path: "/admin/erp-sync-buffer", permission: "integration_logs.view" },
       ]
     },
     {

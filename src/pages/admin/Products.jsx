@@ -116,14 +116,6 @@ export default function Products() {
       accessor: "name"
     },
     {
-      header: "PACK TYPE",
-      accessor: "pack_type"
-    },
-    {
-      header: "PACK SIZE",
-      accessor: "pack_size"
-    },
-    {
       header: "BATCHES",
       cell: (row) => (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-blue-100 text-blue-800">

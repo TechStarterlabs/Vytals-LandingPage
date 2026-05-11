@@ -119,14 +119,8 @@ class ApiClient {
 export const apiClient = new ApiClient()
 
 // Verification API Service (Public - No Auth Required)
-export const verificationApi = {
-  // Get public products list (products with slugs)
-  async getProducts() {
-    return apiClient.get('/verify/products', { customToken: null })
-  },
-
-  // Verify batch (Batch_Flow) with batch_code and product_slug
-  async verifyBatch(batchCode, productSlug, sessionId = null) {
+export const verificationApi = {  // Verify batch (Batch_Flow) — batch_code only
+  async verifyBatch(batchCode, sessionId = null) {
     const userToken = localStorage.getItem('vytals-user-token')
     const headers = {}
     if (userToken) headers['Authorization'] = `Bearer ${userToken}`
@@ -134,7 +128,7 @@ export const verificationApi = {
 
     return apiClient.request('/verify/batch', {
       method: 'POST',
-      body: JSON.stringify({ batch_code: batchCode, product_slug: productSlug }),
+      body: JSON.stringify({ batch_code: batchCode }),
       headers,
       customToken: userToken || null,
     })
@@ -158,7 +152,7 @@ export const verificationApi = {
     const body = { mobile_number: mobileNumber }
     if (batchCode) {
       body.batch_code = batchCode
-    } else {
+    } else if (serialNumber && serialNumber !== 'Batch Scan') {
       body.serial_number = serialNumber
     }
     return apiClient.post('/auth/send-otp', body)
@@ -169,7 +163,10 @@ export const verificationApi = {
     const body = {
       mobile_number: mobileNumber,
       otp,
-      ...(batchCode ? { batch_code: batchCode } : { serial_number: serialNumber }),
+      ...(batchCode
+        ? { batch_code: batchCode }
+        : (serialNumber && serialNumber !== 'Batch Scan' ? { serial_number: serialNumber } : {})
+      ),
       ...(firstName && { first_name: firstName }),
       ...(lastName && { last_name: lastName }),
     }
@@ -185,7 +182,7 @@ export const verificationApi = {
 
   // Email COA certificate (requires customer token from verify-otp)
   async emailCOA(email, batchCode, customerToken) {
-    return apiClient.post('/coa/email', { email, batch_code: batchCode }, customerToken)
+    return apiClient.post('/coa/email', { email, batch_code: batchCode }, { customToken: customerToken })
   }
 }
 
